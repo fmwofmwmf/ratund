@@ -4,7 +4,7 @@ using System.Linq;
 
 public class Player : MonoBehaviour
 {
-    static public GameObject player;
+    static public Player player;
 
     public float bounciness = 1f;
     public float heft = 1f;
@@ -28,7 +28,7 @@ public class Player : MonoBehaviour
 
     void Start()
     {
-        player = this.gameObject;
+        player = this;
 
         rb = GetComponent<Rigidbody>();
         rb.freezeRotation = true;
@@ -37,7 +37,7 @@ public class Player : MonoBehaviour
         _physicsMaterial = new PhysicsMaterial();
         _physicsMaterial.bounceCombine = PhysicsMaterialCombine.Maximum;
         _boxCollider.material = _physicsMaterial;
-
+        Cursor.lockState = CursorLockMode.Locked;
         setBouciness(bounciness);
     }
 
