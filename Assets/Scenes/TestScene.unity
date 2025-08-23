@@ -1809,6 +1809,12 @@ MonoBehaviour:
   groundCheckPoint: {fileID: 0}
   groundCheckRadius: 0.4
   jumpCooldown: 0.1
+  a:
+    serializedVersion: 2
+    m_Curve: []
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1001 &1239948058
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2201,6 +2207,9 @@ MonoBehaviour:
   maxVerticalAngle: 60
   alignCrosshairWithView: 1
   crosshairAimHeight: 1
+  notLook:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!114 &1394536885
 MonoBehaviour:
   m_ObjectHideFlags: 0
