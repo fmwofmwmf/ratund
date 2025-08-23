@@ -44,9 +44,11 @@ public class Player : MonoBehaviour
     private float _lastJumpTime = 0f;
     private bool _hasJumped = false; // Track if already jumped this press
 
+    public AnimationCurve a;
 
     void Start()
     {
+        Debug.Log(a.Evaluate(.5f));
         player = this;
 
         rb = GetComponent<Rigidbody>();

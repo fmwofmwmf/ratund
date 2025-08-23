@@ -19,6 +19,8 @@ public class ThirdPersonCamera : MonoBehaviour
     
     private float horizontalAngle = 0f;
     private float verticalAngle = 20f;
+
+    public LayerMask notLook;
     
     void Start()
     {
@@ -30,7 +32,7 @@ public class ThirdPersonCamera : MonoBehaviour
         }
     }
     
-    void LateUpdate()
+    void FixedUpdate()
     {
         if (target == null) return;
         
@@ -43,8 +45,8 @@ public class ThirdPersonCamera : MonoBehaviour
     {
         Vector2 lookInput = PlayerInputs.Look;
         
-        horizontalAngle += lookInput.x * mouseSensitivity;
-        verticalAngle -= lookInput.y * mouseSensitivity;
+        horizontalAngle += lookInput.x * mouseSensitivity * Time.fixedDeltaTime;
+        verticalAngle -= lookInput.y * mouseSensitivity * Time.fixedDeltaTime;
         verticalAngle = Mathf.Clamp(verticalAngle, minVerticalAngle, maxVerticalAngle);
     }
     
@@ -54,7 +56,12 @@ public class ThirdPersonCamera : MonoBehaviour
         Vector3 rotatedOffset = rotation * offset;
         
         Vector3 desiredPosition = target.position + rotatedOffset;
-        transform.position = Vector3.Lerp(transform.position, desiredPosition, followSpeed * Time.deltaTime);
+        transform.position = Vector3.Slerp(transform.position, desiredPosition, followSpeed * Time.fixedDeltaTime);
+        var v = (transform.position - target.position);
+        if (Physics.Raycast(target.position, v.normalized, out RaycastHit hit, v.magnitude, notLook))
+        {
+            transform.position = hit.point;
+        }
     }
     
     private void UpdateCameraLookDirection()
