@@ -1,22 +1,35 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata;
+using UnityEngine.UIElements;
 
 public class Player : MonoBehaviour
 {
     static public Player player;
 
-    public float bounciness = 0.1f;
+    private Rigidbody rb;
+    private Camera _playerCamera;
+    private BoxCollider _boxCollider;
+    private PhysicsMaterial _physicsMaterial;
+
+    [Header("Chip Stack Display")]
+    public Transform chipStackSpawnPoint;
+    public Chip chipPrefab;
+    public GameObject displayChipPrefab;
+    public List<GameObject> displayChips = new List<GameObject>();
+
+    [Header("Bounciness Settings")]
+    public AnimationCurve bouncinessCurve;
+    public float maxBounciness = 0.8f;
+    public float maxHeft = 200f;
+
+    [Header("Movement")]
     public float heft = 1f;
     public float jumpForce = 1f;
     public float moveForce = 5f;
     public float sprintMoveForce = 8f;
     public float rotation_speed = 10f;
-
-    public Rigidbody rb;
-    private Camera _playerCamera;
-    private BoxCollider _boxCollider;
-    private PhysicsMaterial _physicsMaterial;
 
     [Header("Interaction")]
     private float _interactionRange = 3f;
@@ -58,17 +71,18 @@ public class Player : MonoBehaviour
         _physicsMaterial = new PhysicsMaterial();
         _physicsMaterial.bounceCombine = PhysicsMaterialCombine.Maximum;
         _boxCollider.material = _physicsMaterial;
-        Cursor.lockState = CursorLockMode.Locked;
+        UnityEngine.Cursor.lockState = CursorLockMode.Locked;
 
-        setBouciness(bounciness);
+        SetHeft(heft);
         
-        _crosshairUI = FindObjectOfType<CrosshairUI>();
+        _crosshairUI = FindFirstObjectByType<CrosshairUI>();
     }
 
     void Update()
     {
         HandleMovement();
         HandleInteraction();
+        HandleChipDrop();
     }
     
     private void HandleMovement()
@@ -149,29 +163,11 @@ public class Player : MonoBehaviour
         _jumpPressed = currentJumpPressed;
     }
 
-
-
-    private void HandlePlayerRotation()
-    {
-        // Make player gradually face the camera's forward direction
-        Vector3 cameraForward = _playerCamera.transform.forward;
-        cameraForward.y = 0; // Keep player upright
-        cameraForward.Normalize();
-        
-        if (cameraForward != Vector3.zero)
-        {
-            Quaternion targetRotation = Quaternion.LookRotation(cameraForward);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotation_speed * Time.deltaTime);
-        }
-    }
-
-    
     private bool CheckGrounded()
     {
         Vector3 boxCenter = _boxCollider.bounds.center;
         Vector3 boxSize = _boxCollider.bounds.size;
         
-        float checkDistance = groundCheckDistance + (boxSize.y * 0.5f);
         Vector3 checkPosition = new Vector3(boxCenter.x, boxCenter.y - (boxSize.y * 0.5f), boxCenter.z);
         
         bool grounded = Physics.CheckSphere(checkPosition, groundCheckRadius, groundLayerMask);
@@ -225,6 +221,15 @@ public class Player : MonoBehaviour
         _interactPressed = currentInteractInput;
     }
 
+    private void HandleChipDrop()
+    {
+        bool dropInput = PlayerInputs.Drop;
+        if (dropInput)
+        {
+            DropChip();
+        }
+    }
+
     public Interactable GetCurrentInteractable()
     {
         return _currentInteractable;
@@ -235,22 +240,70 @@ public class Player : MonoBehaviour
         return _currentInteractable != null;
     }
 
-    public void addHeft(float amount)
+    public void PickUpChip()
     {
-        setHeft(heft + amount);
+        Vector3 offset = new Vector3(0, 0, 0);
+        for (int i = 0; i < GetChipCount(); i++)
+        {
+            offset.y += 0.2f;
+        }
+
+        GameObject chip = Instantiate(displayChipPrefab, chipStackSpawnPoint.position + offset, chipStackSpawnPoint.rotation, chipStackSpawnPoint);
+        displayChips.Add(chip);
     }
 
-    public void setHeft(float amount)
+    public int GetChipCount() 
+    {
+        return displayChips.Count;
+    }
+
+    public bool RemoveChip(int amount = 1)
+    {
+        for (int i = 0; i < amount; i++)
+        {
+            if (displayChips.Count > 0)
+            {
+                GameObject chipToRemove = displayChips.Last();
+                displayChips.Remove(chipToRemove);
+                Destroy(chipToRemove);
+            }
+            else
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public void DropChip()
+    {
+        bool wasRemoved = RemoveChip();
+        if (!wasRemoved) return;
+        Instantiate(chipPrefab, chipStackSpawnPoint.position + chipStackSpawnPoint.forward * 0.5f, chipStackSpawnPoint.rotation);
+    }
+
+    public void modifyHeft(float amount)
+    {
+        SetHeft(heft + amount);
+    }
+
+    public void SetHeft(float amount)
     {
         heft = amount;
+        UpdateBounciness();
     }
 
-    public void addBounciness(float amount)
-    {
-        setBouciness(_physicsMaterial.bounciness + amount);
+    public void UpdateBounciness()
+    { 
+        float heftFraction = heft / maxHeft;
+        float newBouncinessFraction = bouncinessCurve.Evaluate(heftFraction);
+        float newBounciness = newBouncinessFraction * maxBounciness;
+
+        Debug.Log("Bounciness updated to " + newBounciness + " from heft " + heft);;
+        SetBounciness(newBounciness);
     }
 
-    public void setBouciness(float amount)
+    public void SetBounciness(float amount)
     {
         if (_physicsMaterial != null)
         {

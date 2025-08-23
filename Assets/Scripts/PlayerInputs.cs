@@ -8,7 +8,7 @@ public class PlayerInputs: MonoBehaviour
     public PlayerInput inputs;
     
     private InputAction _drop;
-    public static bool Drop => Main._drop.IsPressed();
+    public static bool Drop => Main._drop.WasPressedThisFrame();
     private InputAction _interact;
     public static bool Interact => Main._interact.IsPressed();
     private InputAction _jump;
