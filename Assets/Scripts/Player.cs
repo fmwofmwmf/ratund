@@ -1,33 +1,53 @@
 using UnityEngine;
+using System.Collections.Generic;
+using System.Linq;
 
 public class Player : MonoBehaviour
 {
-    private const float startBounciness = 1f;
+    static public GameObject player;
 
-    private float heft = 1f;
-    private float jumpForce = 1f;
-    private float moveForce = 5f;
-    private float rotation_speed = 10f;
+    public float bounciness = 1f;
+    public float heft = 1f;
+    public float jumpForce = 1f;
+    public float moveForce = 5f;
+    public float sprintMoveForce = 8f;
+    public float rotation_speed = 10f;
+    
+    private float _interactionRange = 3f;
+    private LayerMask _interactionLayers = -1;
 
     public Rigidbody rb;
-    private Camera playerCamera;
-    private BoxCollider boxCollider;
-    private PhysicsMaterial physicsMaterial;
+    private Camera _playerCamera;
+    private BoxCollider _boxCollider;
+    private PhysicsMaterial _physicsMaterial;
+    
+    // Interaction variables
+    private List<Interactable> _nearbyInteractables = new List<Interactable>();
+    private Interactable _currentInteractable;
+    private bool _interactPressed = false;
 
     void Start()
     {
+        player = this.gameObject;
+
         rb = GetComponent<Rigidbody>();
         rb.freezeRotation = true;
-        playerCamera = Camera.main;
-        boxCollider = GetComponent<BoxCollider>();
-        physicsMaterial = new PhysicsMaterial();
-        physicsMaterial.bounceCombine = PhysicsMaterialCombine.Maximum;
-        boxCollider.material = physicsMaterial;
+        _playerCamera = Camera.main;
+        _boxCollider = GetComponent<BoxCollider>();
+        _physicsMaterial = new PhysicsMaterial();
+        _physicsMaterial.bounceCombine = PhysicsMaterialCombine.Maximum;
+        _boxCollider.material = _physicsMaterial;
 
-        setBouciness(startBounciness);
+        setBouciness(bounciness);
     }
 
     void Update()
+    {
+        HandleMovement();
+        HandleInteraction();
+    }
+    
+    private void HandleMovement()
     {
         if (PlayerInputs.Jump)
         {
@@ -37,8 +57,8 @@ public class Player : MonoBehaviour
         Vector2 moveInput = PlayerInputs.Move;
         if (moveInput != Vector2.zero)
         {
-            Vector3 cameraForward = playerCamera.transform.forward;
-            Vector3 cameraRight = playerCamera.transform.right;
+            Vector3 cameraForward = _playerCamera.transform.forward;
+            Vector3 cameraRight = _playerCamera.transform.right;
 
             cameraForward.y = 0;
             cameraRight.y = 0;
@@ -47,7 +67,15 @@ public class Player : MonoBehaviour
 
             Vector3 moveDirection = cameraForward * moveInput.y + cameraRight * moveInput.x;
 
-            rb.AddForce(moveDirection * moveForce, ForceMode.Force);
+            bool sprintInput = PlayerInputs.Sprint;
+            if (sprintInput == true)
+            { 
+                rb.AddForce(moveDirection * sprintMoveForce, ForceMode.Force);
+            }
+            else
+            { 
+                rb.AddForce(moveDirection * moveForce, ForceMode.Force);
+            }
 
             if (moveDirection != Vector3.zero)
             {
@@ -55,6 +83,52 @@ public class Player : MonoBehaviour
                 transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotation_speed * Time.deltaTime);
             }
         }
+    }
+    
+    private void HandleInteraction()
+    {
+        FindNearbyInteractables();
+        
+        bool currentInteractInput = PlayerInputs.Interact;
+        if (currentInteractInput && !_interactPressed && _currentInteractable != null)
+        {
+            _currentInteractable.Interact(gameObject);
+        }
+        _interactPressed = currentInteractInput;
+    }
+    
+    private void FindNearbyInteractables()
+    {
+        _nearbyInteractables.Clear();
+        
+        Collider[] colliders = Physics.OverlapSphere(transform.position, _interactionRange, _interactionLayers);
+        
+        foreach (Collider col in colliders)
+        {
+            Interactable interactable = col.GetComponent<Interactable>();
+            if (interactable != null && interactable.CanInteract)
+            {
+                float distance = Vector3.Distance(transform.position, col.transform.position);
+                if (distance <= interactable.InteractionDistance)
+                {
+                    _nearbyInteractables.Add(interactable);
+                }
+            }
+        }
+        
+        _currentInteractable = _nearbyInteractables
+            .OrderBy(i => Vector3.Distance(transform.position, i.transform.position))
+            .FirstOrDefault();
+    }
+
+    public Interactable GetCurrentInteractable()
+    {
+        return _currentInteractable;
+    }
+    
+    public bool CanInteract()
+    {
+        return _currentInteractable != null;
     }
 
     public void addHeft(float amount)
@@ -67,16 +141,28 @@ public class Player : MonoBehaviour
         heft = amount;
     }
 
-    public void addBoucniness(float amount)
+    public void addBounciness(float amount)
     {
-        setBouciness(physicsMaterial.bounciness + amount);
+        setBouciness(_physicsMaterial.bounciness + amount);
     }
-    
+
     public void setBouciness(float amount)
     {
-        if (physicsMaterial != null)
+        if (_physicsMaterial != null)
         {
-            physicsMaterial.bounciness = amount;
+            _physicsMaterial.bounciness = amount;
+        }
+    }
+    
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.blue;
+        Gizmos.DrawWireSphere(transform.position, _interactionRange);
+        
+        if (_currentInteractable != null)
+        {
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawLine(transform.position, _currentInteractable.transform.position);
         }
     }
 }

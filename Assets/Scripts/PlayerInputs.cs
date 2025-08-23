@@ -34,14 +34,14 @@ public class PlayerInputs: MonoBehaviour
     }
 
     private void Start()
-    {
-        _drop = inputs.currentActionMap.FindAction("Drop");
-        _interact = inputs.currentActionMap.FindAction("Dash");
-        _jump = inputs.currentActionMap.FindAction("Jump");
-        _sprint = inputs.currentActionMap.FindAction("Sprint");
-        _menu = inputs.currentActionMap.FindAction("Menu");
-        _move = inputs.currentActionMap.FindAction("Move");
-        _look = inputs.currentActionMap.FindAction("Look");
-    }
+{
+    _drop = inputs.currentActionMap.FindAction("Drop");
+    _interact = inputs.currentActionMap.FindAction("Interact");
+    _jump = inputs.currentActionMap.FindAction("Jump");
+    _sprint = inputs.currentActionMap.FindAction("Sprint");
+    _menu = inputs.currentActionMap.FindAction("Menu");
+    _move = inputs.currentActionMap.FindAction("Move");
+    _look = inputs.currentActionMap.FindAction("Look");
+}
 }
 
