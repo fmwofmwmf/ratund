@@ -6,25 +6,36 @@ public class Player : MonoBehaviour
 {
     static public Player player;
 
-    public float bounciness = 1f;
+    public float bounciness = 0.1f;
     public float heft = 1f;
     public float jumpForce = 1f;
     public float moveForce = 5f;
     public float sprintMoveForce = 8f;
     public float rotation_speed = 10f;
-    
-    private float _interactionRange = 3f;
-    private LayerMask _interactionLayers = -1;
 
     public Rigidbody rb;
     private Camera _playerCamera;
     private BoxCollider _boxCollider;
     private PhysicsMaterial _physicsMaterial;
-    
-    // Interaction variables
-    private List<Interactable> _nearbyInteractables = new List<Interactable>();
+
+    [Header("Interaction")]
+    private float _interactionRange = 3f;
+    private LayerMask _interactionLayers = -1;
+    public float raycastDistance = 10f;
+
     private Interactable _currentInteractable;
     private bool _interactPressed = false;
+    private CrosshairUI _crosshairUI;
+
+    [Header("Ground Detection")]
+    public LayerMask groundLayerMask = -1;
+    public float groundCheckDistance = 0.1f;
+    public Transform groundCheckPoint;
+
+    private bool _isGrounded = false;
+    public float groundCheckRadius = 0.3f;
+
+    public bool IsGrounded => _isGrounded;
 
     void Start()
     {
@@ -38,7 +49,10 @@ public class Player : MonoBehaviour
         _physicsMaterial.bounceCombine = PhysicsMaterialCombine.Maximum;
         _boxCollider.material = _physicsMaterial;
         Cursor.lockState = CursorLockMode.Locked;
+
         setBouciness(bounciness);
+        
+        _crosshairUI = FindObjectOfType<CrosshairUI>();
     }
 
     void Update()
@@ -49,7 +63,9 @@ public class Player : MonoBehaviour
     
     private void HandleMovement()
     {
-        if (PlayerInputs.Jump)
+        _isGrounded = CheckGrounded();
+        
+        if (PlayerInputs.Jump && _isGrounded)
         {
             rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
         }
@@ -76,49 +92,84 @@ public class Player : MonoBehaviour
             { 
                 rb.AddForce(moveDirection * moveForce, ForceMode.Force);
             }
+        }
+        
+        // Player rotation now follows camera direction instead of movement direction
+        HandlePlayerRotation();
+    }
 
-            if (moveDirection != Vector3.zero)
+    private void HandlePlayerRotation()
+    {
+        // Make player gradually face the camera's forward direction
+        Vector3 cameraForward = _playerCamera.transform.forward;
+        cameraForward.y = 0; // Keep player upright
+        cameraForward.Normalize();
+        
+        if (cameraForward != Vector3.zero)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(cameraForward);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotation_speed * Time.deltaTime);
+        }
+    }
+
+    
+    private bool CheckGrounded()
+    {
+        Vector3 boxCenter = _boxCollider.bounds.center;
+        Vector3 boxSize = _boxCollider.bounds.size;
+        
+        float checkDistance = groundCheckDistance + (boxSize.y * 0.5f);
+        Vector3 checkPosition = new Vector3(boxCenter.x, boxCenter.y - (boxSize.y * 0.5f), boxCenter.z);
+        
+        bool grounded = Physics.CheckSphere(checkPosition, groundCheckRadius, groundLayerMask);
+        
+        return grounded;
+    }
+
+    private void FindInteractableInSight()
+    {
+        _currentInteractable = null;
+        
+        // Raycast from camera center
+        Ray ray = _playerCamera.ScreenPointToRay(new Vector3(Screen.width * 0.5f, Screen.height * 0.5f, 0));
+        RaycastHit hit;
+        
+        Debug.DrawRay(ray.origin, ray.direction * raycastDistance, Color.red);
+        
+        if (Physics.Raycast(ray, out hit, raycastDistance, _interactionLayers))
+        {
+            Interactable interactable = hit.collider.GetComponent<Interactable>();
+            
+            if (interactable != null && interactable.CanInteract)
             {
-                Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
-                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotation_speed * Time.deltaTime);
+                float distance = Vector3.Distance(transform.position, hit.point);
+                
+                // Check if within interaction range
+                if (distance <= interactable.InteractionDistance)
+                {
+                    _currentInteractable = interactable;
+                }
             }
+        }
+        
+        // Update crosshair visual state with interaction prompt
+        if (_crosshairUI != null)
+        {
+            string promptText = _currentInteractable != null ? _currentInteractable.InteractionPrompt : "";
+            _crosshairUI.SetInteractableState(_currentInteractable != null, promptText);
         }
     }
     
     private void HandleInteraction()
     {
-        FindNearbyInteractables();
-        
+        FindInteractableInSight();
+
         bool currentInteractInput = PlayerInputs.Interact;
         if (currentInteractInput && !_interactPressed && _currentInteractable != null)
         {
             _currentInteractable.Interact(gameObject);
         }
         _interactPressed = currentInteractInput;
-    }
-    
-    private void FindNearbyInteractables()
-    {
-        _nearbyInteractables.Clear();
-        
-        Collider[] colliders = Physics.OverlapSphere(transform.position, _interactionRange, _interactionLayers);
-        
-        foreach (Collider col in colliders)
-        {
-            Interactable interactable = col.GetComponent<Interactable>();
-            if (interactable != null && interactable.CanInteract)
-            {
-                float distance = Vector3.Distance(transform.position, col.transform.position);
-                if (distance <= interactable.InteractionDistance)
-                {
-                    _nearbyInteractables.Add(interactable);
-                }
-            }
-        }
-        
-        _currentInteractable = _nearbyInteractables
-            .OrderBy(i => Vector3.Distance(transform.position, i.transform.position))
-            .FirstOrDefault();
     }
 
     public Interactable GetCurrentInteractable()
@@ -164,5 +215,16 @@ public class Player : MonoBehaviour
             Gizmos.color = Color.yellow;
             Gizmos.DrawLine(transform.position, _currentInteractable.transform.position);
         }
+        
+        if (_boxCollider != null)
+        {
+            Vector3 boxCenter = _boxCollider.bounds.center;
+            Vector3 boxSize = _boxCollider.bounds.size;
+            Vector3 checkPosition = new Vector3(boxCenter.x, boxCenter.y - (boxSize.y * 0.5f), boxCenter.z);
+            
+            Gizmos.color = _isGrounded ? Color.green : Color.red;
+            Gizmos.DrawWireSphere(checkPosition, groundCheckRadius);
+        }
     }
+
 }
