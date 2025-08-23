@@ -37,6 +37,14 @@ public class Player : MonoBehaviour
 
     public bool IsGrounded => _isGrounded;
 
+    [Header("Jump Settings")]
+    public float jumpCooldown = 0.3f; // Minimum time between jumps
+
+    private bool _jumpPressed = false;
+    private float _lastJumpTime = 0f;
+    private bool _hasJumped = false; // Track if already jumped this press
+
+
     void Start()
     {
         player = this;
@@ -65,22 +73,22 @@ public class Player : MonoBehaviour
     {
         _isGrounded = CheckGrounded();
         
-        if (PlayerInputs.Jump && _isGrounded)
-        {
-            rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
-        }
+        // Handle jump input with single jump per press
+        HandleJumpInput();
 
+        // Declare camera directions once for the entire method
+        Vector3 cameraForward = _playerCamera.transform.forward;
+        Vector3 cameraRight = _playerCamera.transform.right;
+        
+        cameraForward.y = 0;
+        cameraRight.y = 0;
+        cameraForward.Normalize();
+        cameraRight.Normalize();
+
+        // Handle movement input
         Vector2 moveInput = PlayerInputs.Move;
         if (moveInput != Vector2.zero)
         {
-            Vector3 cameraForward = _playerCamera.transform.forward;
-            Vector3 cameraRight = _playerCamera.transform.right;
-
-            cameraForward.y = 0;
-            cameraRight.y = 0;
-            cameraForward.Normalize();
-            cameraRight.Normalize();
-
             Vector3 moveDirection = cameraForward * moveInput.y + cameraRight * moveInput.x;
 
             bool sprintInput = PlayerInputs.Sprint;
@@ -94,9 +102,52 @@ public class Player : MonoBehaviour
             }
         }
         
-        // Player rotation now follows camera direction instead of movement direction
-        HandlePlayerRotation();
+        // Player rotation follows camera direction (reuse the same cameraForward variable)
+        if (cameraForward != Vector3.zero)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(cameraForward);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotation_speed * 0.5f * Time.deltaTime);
+        }
     }
+
+    private void HandleJumpInput()
+    {
+        bool currentJumpPressed = PlayerInputs.JumpPressed;
+        bool currentJumpHeld = PlayerInputs.Jump;
+        
+        // Check if jump was just pressed (not held from previous frame)
+        if (currentJumpPressed && !_jumpPressed)
+        {
+            _hasJumped = false; // Reset jump flag on new press
+        }
+        
+        // Allow jump if: grounded, jump pressed, haven't jumped yet this press, and cooldown passed
+        if (_isGrounded && currentJumpHeld && !_hasJumped && Time.time - _lastJumpTime >= jumpCooldown)
+        {
+            // Reset Y velocity so jump force is consistent
+            Vector3 vel = rb.linearVelocity;
+            vel.y = 0f;
+            rb.linearVelocity = vel;
+
+            // Apply jump impulse
+            rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+
+            _lastJumpTime = Time.time;
+            _hasJumped = true;
+
+            Debug.Log("Jump executed!");
+        }
+        
+        // Reset jump flag when key is released
+        if (!currentJumpHeld)
+        {
+            _hasJumped = false;
+        }
+        
+        _jumpPressed = currentJumpPressed;
+    }
+
+
 
     private void HandlePlayerRotation()
     {

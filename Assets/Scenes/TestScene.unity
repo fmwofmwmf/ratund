@@ -795,7 +795,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   bounciness: 0.1
   heft: 1
-  jumpForce: 1
+  jumpForce: 10
   moveForce: 5
   sprintMoveForce: 8
   rotation_speed: 10
@@ -807,6 +807,7 @@ MonoBehaviour:
   groundCheckDistance: 0.2
   groundCheckPoint: {fileID: 0}
   groundCheckRadius: 0.4
+  jumpCooldown: 0.1
 --- !u!1 &1394536880
 GameObject:
   m_ObjectHideFlags: 0

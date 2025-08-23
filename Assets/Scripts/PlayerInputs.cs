@@ -13,6 +13,7 @@ public class PlayerInputs: MonoBehaviour
     public static bool Interact => Main._interact.IsPressed();
     private InputAction _jump;
     public static bool Jump => Main._jump.ReadValue<float>() > 0;
+    public static bool JumpPressed => Main._jump.WasPressedThisFrame();
     private InputAction _sprint;
     public static bool Sprint => Main._sprint.ReadValue<float>() > 0;
     private InputAction _menu;
