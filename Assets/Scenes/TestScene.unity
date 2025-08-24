@@ -1942,7 +1942,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   chipStackSpawnPoint: {fileID: 632863953}
   chipPrefab: {fileID: 0}
-  displayChipPrefab: {fileID: 0}
+  chipStackPrefab: {fileID: 4981011781649738209, guid: 01c3c286421047c4fa22ca6c82c1717e, type: 3}
   displayChips: []
   bouncinessCurve:
     serializedVersion: 2
