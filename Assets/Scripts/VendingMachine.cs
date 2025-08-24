@@ -4,6 +4,9 @@ using UnityEngine.Events;
 
 public class VendingMachine : MonoBehaviour
 {
+    public AudioSource audioSource;
+    public AudioClip chipInsertSound;
+    public AudioClip purchaseSound;
     public FloatUnityEvent depositedAmountUpdate;
     public UnityEvent notEnoughDepositedAmount;
     public UnityEvent boughtStarCheese;
@@ -25,6 +28,7 @@ public class VendingMachine : MonoBehaviour
 
     public void depositChips()
     {
+        audioSource.PlayOneShot(chipInsertSound, 0.1f);
         float chipValue = Player.player.getChipValue();
         changeDepositedAmount(chipValue);
         depositedAmountUpdate.Invoke(chipValue);
@@ -35,6 +39,7 @@ public class VendingMachine : MonoBehaviour
     {
         if (hasDepositedAmount(starCheeseCost))
         {
+            audioSource.PlayOneShot(purchaseSound, 0.07f);
             changeDepositedAmount(-starCheeseCost);
             SpawnCheese(starCheesePrefab);
         }
@@ -48,6 +53,7 @@ public class VendingMachine : MonoBehaviour
     {
         if (hasDepositedAmount(roundCheeseCost))
         {
+            audioSource.PlayOneShot(purchaseSound, 0.07f);
             changeDepositedAmount(-roundCheeseCost);
             SpawnCheese(roundCheesePrefab);
         }
@@ -61,6 +67,7 @@ public class VendingMachine : MonoBehaviour
     {
         if (hasDepositedAmount(wedgeCheeseCost))
         {
+            audioSource.PlayOneShot(purchaseSound, 0.07f);
             changeDepositedAmount(-wedgeCheeseCost);
             SpawnCheese(wedgeCheesePrefab);
         }

@@ -3,6 +3,8 @@ using UnityEngine;
 
 public class PlinkoMachine : MonoBehaviour
 {
+    public AudioSource audioSource;
+    public AudioClip knobBreakSound;
     public static PlinkoMachine plinkoMachine;
 
     public Camera plinkoCamera;
@@ -24,12 +26,16 @@ public class PlinkoMachine : MonoBehaviour
         if (plinkoMachine == null)
         {
             plinkoMachine = this;
-
         }
         else
         {
             Destroy(gameObject);
         }
+    }
+
+    public void playKnobBreakSound()
+    {
+        audioSource.PlayOneShot(knobBreakSound, 0.1f);
     }
 
     public void spawnChips(int value = 0)

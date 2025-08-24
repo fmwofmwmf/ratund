@@ -7,6 +7,7 @@ public class Pin : MonoBehaviour
     {
         if (other.rigidbody && other.rigidbody.gameObject.TryGetComponent(out Player p) && p.heft >= 1000)
         {
+            PlinkoMachine.plinkoMachine.playKnobBreakSound();
             Destroy(gameObject);
         }
     }

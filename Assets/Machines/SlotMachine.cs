@@ -6,6 +6,12 @@ using TMPro;
 
 public class SlotMachineDirect : MonoBehaviour
 {
+    public AudioSource audioSource;
+    public AudioClip leverSound;
+    public AudioClip winSound;
+    public AudioClip spinSound;
+    public AudioClip chipInsertSound;
+
     [System.Serializable]
     public class SymbolChance
     {
@@ -44,6 +50,11 @@ public class SlotMachineDirect : MonoBehaviour
         }
     }
 
+    private void Start()
+    {
+        //Spin();
+    }
+
     public void trySpin()
     {
         isSpinning = true;
@@ -69,12 +80,13 @@ public class SlotMachineDirect : MonoBehaviour
         float animationTime = 0.3f;
         float elapsedTime = 0f;
         
+        audioSource.PlayOneShot(leverSound, 0.1f);
         while (elapsedTime < animationTime)
         {
             elapsedTime += Time.deltaTime;
             float progress = elapsedTime / animationTime;
             progress = Mathf.SmoothStep(0f, 1f, progress); // Smooth animation curve
-            
+
             handle.transform.localEulerAngles = Vector3.Lerp(originalRotation, targetRotation, progress);
             yield return null;
         }
@@ -103,6 +115,7 @@ public class SlotMachineDirect : MonoBehaviour
 
     public void depositChips()
     {
+        audioSource.PlayOneShot(chipInsertSound, 0.1f);
         float chipValue = Player.player.getChipValue();
         changeMoney(chipValue);
         Update();
@@ -146,6 +159,7 @@ public class SlotMachineDirect : MonoBehaviour
 
     public void Spin()
     {
+        audioSource.PlayOneShot(spinSound, 0.1f);
         isSpinning = true;
         money -= betAmount;
         StopAllCoroutines();
@@ -227,6 +241,7 @@ public class SlotMachineDirect : MonoBehaviour
 
     void CheckWin(Sprite[] results)
     {
+        audioSource.PlayOneShot(winSound, 0.08f);
         if (results[0] == results[1] && results[1] == results[2])
         {
             Debug.Log("WIN!");
@@ -236,5 +251,6 @@ public class SlotMachineDirect : MonoBehaviour
         {
             spawner.SpawnChips(1);
         }
+
     }
 }
