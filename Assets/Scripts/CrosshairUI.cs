@@ -12,12 +12,8 @@ public class CrosshairUI : MonoBehaviour
     
     [Header("Interaction Text Settings")]
     public TextMeshProUGUI interactionText;
-    public Vector2 textOffset = new Vector2(30f, 15f); // Offset from crosshair center
-    public Color textColor = Color.white;
-    public float textSize = 16f;
     
     private RectTransform _crosshairRect;
-    private RectTransform _textRect;
     private bool _isInteractionAvailable = false;
     
     void Start()
@@ -50,25 +46,8 @@ public class CrosshairUI : MonoBehaviour
             CreateInteractionText();
         }
         
-        _textRect = interactionText.GetComponent<RectTransform>();
-        
-        // Position text centered above crosshair
-        _textRect.anchorMin = new Vector2(0.5f, 0.5f);
-        _textRect.anchorMax = new Vector2(0.5f, 0.5f);
-        _textRect.anchoredPosition = new Vector2(0f, textOffset.y); // X = 0 for horizontal center
-        
-        // Set text properties
-        interactionText.color = textColor;
-        interactionText.fontSize = textSize;
         interactionText.text = "";
         interactionText.gameObject.SetActive(false);
-        
-        // Center-align text horizontally
-        interactionText.horizontalAlignment = HorizontalAlignmentOptions.Center;
-        interactionText.verticalAlignment = VerticalAlignmentOptions.Middle;
-        
-        // Auto-size the text rect to fit content
-        _textRect.sizeDelta = new Vector2(200f, 30f); // Set reasonable width and height
     }
 
     

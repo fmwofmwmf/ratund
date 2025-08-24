@@ -76,6 +76,10 @@ public class Player : MonoBehaviour
     public Transform hatAnchor;
     public Hat currentHat;
     public bool forceBall;
+    public Material beerMaterial;
+    public Material coolMaterial;
+    public bool vodkaMode;
+    public float drunkness;
 
     void Start()
     {
@@ -101,6 +105,12 @@ public class Player : MonoBehaviour
         DoFatRat();
         if (PlayerInputs.Respawn) transform.position = house.position;
     }
+    
+    void OnDestroy()
+    {
+        beerMaterial.SetFloat("_Drunkness", 0);
+        beerMaterial.SetFloat("_Frunkness", 0);
+    }
 
     private void FixedUpdate()
     {
@@ -108,6 +118,22 @@ public class Player : MonoBehaviour
         d.y = 0;
         rb.linearVelocity -= (_isGrounded? groundDrag : airDrag) * Time.fixedDeltaTime * d;
         HandleMovement();
+        
+        if (!vodkaMode)
+        {
+            drunkness *= 0.999f;
+            beerMaterial.SetFloat("_Drunkness", drunkness/1000 * 90);
+            beerMaterial.SetFloat("_Frunkness", drunkness/1000f);
+            if (drunkness >= 1000)
+            {
+                skinnedMeshRenderer.material = coolMaterial;
+                vodkaMode = true;
+                drunkness = 10000;
+                beerMaterial.SetFloat("_Drunkness", 0);
+                beerMaterial.SetFloat("_Frunkness", 0);
+            }
+        }
+        
     }
 
     public void WearHat(Hat hat)

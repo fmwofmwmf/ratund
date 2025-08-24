@@ -44,48 +44,17 @@ public class SlotMachineDirect : MonoBehaviour
         }
     }
 
-    private void Start()
-    {
-        Spin();
-    }
-
     public void trySpin()
     {
-        if (!isSpinning && money >= betAmount && betAmount > 0)
-        {
-            if (Player.player.HeftStage == 1 || Player.player.HeftStage == 2)
-            {
-                isSpinning = true;
-                previousCamera = Camera.main;
+        isSpinning = true;
+        previousCamera = Camera.main;
 
-                if (previousCamera != null)
-                    previousCamera.enabled = false;
+        if (previousCamera != null)
+            previousCamera.enabled = false;
 
-                if (slotMachineCamera != null)
-                    slotMachineCamera.enabled = true;
-                StartCoroutine(HandleSpinRoutine());
-            }
-            else
-            {
-                Rigidbody rigidBody = Player.player.GetComponent<Rigidbody>();
-                float speed = rigidBody.linearVelocity.magnitude;
-                float impulse = Player.player.heft * speed;
-
-                Debug.Log("Impulse: " + impulse);
-                if (impulse > 7.5f)
-                {
-                    isSpinning = true;
-                    previousCamera = Camera.main;
-
-                    if (previousCamera != null)
-                        previousCamera.enabled = false;
-
-                    if (slotMachineCamera != null)
-                        slotMachineCamera.enabled = true;
-                    StartCoroutine(HandleSpinRoutine());
-                }   
-            }
-        }
+        if (slotMachineCamera != null)
+            slotMachineCamera.enabled = true;
+        StartCoroutine(HandleSpinRoutine());
     }
 
     IEnumerator HandleSpinRoutine()

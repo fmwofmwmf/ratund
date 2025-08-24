@@ -12,7 +12,7 @@ public class PlinkoMachine : MonoBehaviour
     public Transform chipSpawnPoint;
     public Chip chip1Prefab;
     public Chip chip5Prefab;
-    public Chip chip20Prefab;
+    public Chip chip25Prefab;
     public List<Pin> pins;
     void Start()
     {
@@ -36,10 +36,10 @@ public class PlinkoMachine : MonoBehaviour
     {
         while (true)
         {
-            if (value >= 20)
+            if (value >= 25)
             {
-                value -= 20;
-                Instantiate(chip20Prefab, chipSpawnPoint.position, chipSpawnPoint.rotation);
+                value -= 25;
+                Instantiate(chip25Prefab, chipSpawnPoint.position, chipSpawnPoint.rotation);
             }
             else if (value >= 5)
             {

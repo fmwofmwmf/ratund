@@ -9,6 +9,8 @@ public class MessageDisplay : MonoBehaviour
 
     [Header("UI References")]
     public TMP_Text uiText;             // TMP text component
+
+    public GameObject textBox;
     public float typeSpeed = 0.05f;     // Time between letters
     public float messageDelay = 1.5f;   // Delay after a message finishes before the next starts
 
@@ -51,14 +53,14 @@ public class MessageDisplay : MonoBehaviour
     private IEnumerator ProcessQueue()
     {
         isDisplaying = true;
-
+        textBox.SetActive(true);
         while (messageQueue.Count > 0)
         {
             string nextMessage = messageQueue.Dequeue();
             yield return StartCoroutine(TypeMessage(nextMessage));
             yield return new WaitForSeconds(messageDelay);
         }
-        uiText.gameObject.SetActive(false);
+        textBox.SetActive(false);
         isDisplaying = false;
     }
 

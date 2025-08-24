@@ -69,8 +69,8 @@ MonoBehaviour:
 
     5'
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: b3d5ce536e7c6024292463b04a841bac, type: 2}
+  m_sharedMaterial: {fileID: 1667449136024185294, guid: b3d5ce536e7c6024292463b04a841bac, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -355,6 +355,7 @@ MonoBehaviour:
   pressDepth: 0.03
   pressSpeed: 0.2
   returnSpeed: 0.1
+  pressDirection: {x: 0, y: 0, z: 1}
   onPressed:
     m_PersistentCalls:
       m_Calls: []
