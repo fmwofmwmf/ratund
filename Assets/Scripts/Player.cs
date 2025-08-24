@@ -15,8 +15,9 @@ public class Player : MonoBehaviour
 
     [Header("Chip Stack Display")]
     public Transform chipStackSpawnPoint;
-    public Chip chipPrefab;
-    public GameObject displayChipPrefab;
+    public Chip chip1Prefab;
+    public Chip chip5Prefab;
+    public Chip chip20Prefab;
     public List<Chip> displayChips = new List<Chip>();
 
     [Header("Bounciness Settings")]
@@ -243,11 +244,48 @@ public class Player : MonoBehaviour
     private void HandleChipDrop()
     {
         bool dropInput = PlayerInputs.Drop;
-        if (dropInput)
+        if (dropInput && displayChips.Count > 0)
         {
-             bool wasRemoved = RemoveChip();
-            if (!wasRemoved) return;
-            Instantiate(chipPrefab, chipStackSpawnPoint.position + chipStackSpawnPoint.forward * 0.5f, chipStackSpawnPoint.rotation);
+            // Work on a copy so we can clear the original list safely
+            List<Chip> chipsToDrop = new List<Chip>(displayChips);
+            displayChips.Clear();
+
+            float verticalSpacing = 0.20f; // space between dropped chips
+            int index = 0;
+
+            foreach (Chip chip in chipsToDrop)
+            {
+                // 1. Remove from parent
+                chip.transform.SetParent(null);
+
+                // 2. Drop position (spread slightly so they don't overlap)
+                Vector3 dropPosition = transform.position 
+                    + transform.forward * 1.5f   // in front of player
+                    + Vector3.up * (0.5f + index * verticalSpacing);
+
+
+                chip.transform.position = dropPosition;
+
+                // 3. Reset rotation to upright
+                chip.transform.rotation = Quaternion.Euler(90, 0, 0);
+
+                // 4. Re-enable physics
+                Rigidbody rb = chip.GetComponent<Rigidbody>();
+                if (rb != null)
+                {
+                    rb.isKinematic = false;
+                    rb.useGravity = true;
+                }
+
+                // 5. Re-enable interaction
+                Interactable inter = chip.GetComponent<Interactable>();
+                if (inter != null)
+                {
+                    inter.SetCanInteract(true);
+                }
+
+                index++;
+            }
         }
     }
 
@@ -274,6 +312,12 @@ public class Player : MonoBehaviour
         {
             rb.isKinematic = true;
             rb.useGravity = false;
+        }
+
+        Interactable inter = chip.gameObject.GetComponent<Interactable>();
+        if (inter != null)
+        {
+            inter.SetCanInteract(false);
         }
 
         displayChips.Add(chip);
