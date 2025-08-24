@@ -6,12 +6,12 @@ public class PlinkoSlot : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
-        PlinkoBall plinkoBall = other.GetComponent<PlinkoBall>();
-        if (plinkoBall != null)
+        Player player = other.GetComponent<Player>();
+        if (player != null)
         {
-            plinkoBall.baseChipValue *= multiplier;
-            PlinkoMachine.plinkoMachine.spawnChips((int)plinkoBall.baseChipValue);
-            Destroy(other.gameObject);
+            float spawnValue = player.GetPlinkoValue() * multiplier;
+            PlinkoMachine.plinkoMachine.spawnChips((int)spawnValue);
+            PlinkoMachine.plinkoMachine.ejectPlayerFromMachine();
         }
     }
 }

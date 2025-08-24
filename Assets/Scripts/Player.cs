@@ -13,6 +13,9 @@ public class Player : MonoBehaviour
     private Camera _playerCamera;
     private PhysicsMaterial _physicsMaterial;
 
+    [Header("Plinko Value")]
+    public float maxPlinkoValue = 10f;
+
     [Header("Chip Stack Display")]
     public Transform chipStackSpawnPoint;
     public float chipHeight = 0.2f;
@@ -360,6 +363,14 @@ public class Player : MonoBehaviour
     }
 
     private int _a;
+
+    public float GetPlinkoValue()
+    { 
+        float heftFraction = heft / maxHeft;
+        float newBouncinessFraction = bouncinessCurve.Evaluate(heftFraction);
+        float plinkoValue = newBouncinessFraction * maxPlinkoValue;
+        return plinkoValue;
+    }
 
     public void PickUpChip(Chip chip)
     {
