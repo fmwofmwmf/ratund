@@ -4,9 +4,11 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.UIElements;
 using NUnit.Framework.Interfaces;
+using UnityEngine.Events;
 
 public class Player : MonoBehaviour
 {
+    public IntEvent playerHeftChanged;
     static public Player player;
 
     private Rigidbody rb;
@@ -473,7 +475,7 @@ public class Player : MonoBehaviour
     {
         return displayChips.Count;
     }
-    
+
     public void modifyHeft(float amount)
     {
         if (HeftStage > 0 && amount < 10) amount /= 3;
@@ -484,6 +486,7 @@ public class Player : MonoBehaviour
     public void SetHeft(float amount)
     {
         heft = amount;
+        playerHeftChanged.Invoke((int)heft);
         UpdateBounciness();
     }
 
