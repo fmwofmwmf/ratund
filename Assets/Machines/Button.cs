@@ -8,6 +8,7 @@ public class PressableButton : MonoBehaviour
     public float pressDepth = 0.1f;    // How far it moves down
     public float pressSpeed = 10f;     // How fast it moves
     public float returnSpeed = 5f;     // How fast it goes back up
+    public Vector3 pressDirection = Vector3.forward;
     
     [Header("Events")]
     public UnityEvent onPressed;
@@ -47,7 +48,7 @@ public class PressableButton : MonoBehaviour
     {
         isPressed = true;
 
-        Vector3 targetPos = initialPos - new Vector3(0, 0, pressDepth);
+        Vector3 targetPos = initialPos - pressDirection * pressDepth;
 
         // Move down
         while (Vector3.Distance(buttonTop.localPosition, targetPos) > 0.001f)

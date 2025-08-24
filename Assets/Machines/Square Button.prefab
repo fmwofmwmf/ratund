@@ -213,9 +213,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   buttonTop: {fileID: 6384446687732216270}
-  pressDepth: 0.03
-  pressSpeed: 0.2
-  returnSpeed: 0.1
+  pressDepth: 0.2
+  pressSpeed: 1
+  returnSpeed: 0.5
+  pressDirection: {x: 0, y: -1, z: 0}
   onPressed:
     m_PersistentCalls:
       m_Calls: []

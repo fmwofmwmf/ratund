@@ -28,6 +28,9 @@ public class Player : MonoBehaviour
 
     [Header("Movement")]
     public float heft = 1f;
+
+    public float EffectiveHeft => Mathf.Sqrt(heft);
+    public int HeftStage => heft < 10 ? 0 : (heft < 100 ? 1 : 2);
     public float jumpForce = 1f;
     public float moveForce = 5f;
     public float sprintMoveForce = 8f;
@@ -36,12 +39,15 @@ public class Player : MonoBehaviour
     public float groundDrag;
     public float airSpeedModifier;
     public AnimationCurve moveDotScale;
+    public AnimationCurve heftWalkScale;
+    public AnimationCurve heftSprintScale;
     public Animator animator;
     public ParticleSystem particles1, particles2;
+    public SkinnedMeshRenderer skinnedMeshRenderer;
 
     [Header("Interaction")]
     private float _interactionRange = 3f;
-    private LayerMask _interactionLayers = -1;
+    public LayerMask interactionLayers;
     public float raycastDistance = 10f;
     
     private Interactable _currentInteractable;
@@ -51,7 +57,6 @@ public class Player : MonoBehaviour
     [Header("Ground Detection")]
     public LayerMask groundLayerMask = -1;
     public float groundCheckDistance = 0.1f;
-    public Transform groundCheckPoint;
 
     private bool _isGrounded = false;
     public float groundCheckRadius = 0.3f;
@@ -69,6 +74,7 @@ public class Player : MonoBehaviour
 
     public Transform hatAnchor;
     public Hat currentHat;
+    public bool forceBall;
 
     void Start()
     {
@@ -89,9 +95,9 @@ public class Player : MonoBehaviour
 
     void Update()
     {
-        HandleMovement();
         HandleInteraction();
         HandleChipDrop();
+        DoFatRat();
     }
 
     private void FixedUpdate()
@@ -99,6 +105,7 @@ public class Player : MonoBehaviour
         var d = rb.linearVelocity;
         d.y = 0;
         rb.linearVelocity -= (_isGrounded? groundDrag : airDrag) * Time.fixedDeltaTime * d;
+        HandleMovement();
     }
 
     public void WearHat(Hat hat)
@@ -107,6 +114,25 @@ public class Player : MonoBehaviour
         currentHat = hat;
         hat.transform.SetParent(hatAnchor);
         hat.transform.SetPositionAndRotation(hatAnchor.position, hatAnchor.rotation);
+    }
+
+    public void DoFatRat()
+    {
+        transform.localScale = (heft/100f * .01f + .2f) * Vector3.one;
+        if (HeftStage == 0)
+        {
+            skinnedMeshRenderer.SetBlendShapeWeight(0, heft*10);
+        } else if (HeftStage == 1)
+        {
+            skinnedMeshRenderer.SetBlendShapeWeight(0, 100);
+            skinnedMeshRenderer.SetBlendShapeWeight(1, heft);
+        }
+        else if (HeftStage == 2)
+        {
+            skinnedMeshRenderer.SetBlendShapeWeight(0, 100);
+            skinnedMeshRenderer.SetBlendShapeWeight(1, 100);
+            
+        }
     }
 
     public float getChipValue()
@@ -138,11 +164,9 @@ public class Player : MonoBehaviour
         // Declare camera directions once for the entire method
         Vector3 cameraForward = _playerCamera.transform.forward;
         Vector3 cameraRight = _playerCamera.transform.right;
-
+        animator.SetInteger("Rolling", 0);
         cameraForward.y = 0;
         cameraRight.y = 0;
-        cameraForward.Normalize();
-        cameraRight.Normalize();
 
         bool particleOn = false;
         
@@ -151,27 +175,38 @@ public class Player : MonoBehaviour
         if (moveInput != Vector2.zero)
         {
             Vector3 moveDirection = cameraForward * moveInput.y + cameraRight * moveInput.x;
-
+            moveDirection.Normalize();
             bool sprintInput = PlayerInputs.Sprint;
-            var d = moveDotScale.Evaluate(Vector3.Dot(moveDirection, rb.linearVelocity));
+            var d = moveDotScale.Evaluate(Vector3.Dot(moveDirection, rb.linearVelocity.normalized));
             if (sprintInput)
             {
-                rb.AddForce((_isGrounded? 1 : airSpeedModifier) * sprintMoveForce * d * moveDirection, ForceMode.Force);
+                var f = heftSprintScale.Evaluate(EffectiveHeft) * sprintMoveForce * d;
+                rb.AddForce((_isGrounded? 1 : airSpeedModifier) * f * moveDirection, ForceMode.Force);
                 animator.speed = 3;
                 if (_isGrounded)
                 {
                     particleOn = true;
                 }
+                if (HeftStage == 1) animator.SetInteger("Rolling", 1);
+                else if (HeftStage == 2) animator.SetInteger("Rolling", 2);
             }
             else
             {
-                rb.AddForce((_isGrounded? 1 : airSpeedModifier) * moveForce * d * moveDirection, ForceMode.Force);
+                var f = heftWalkScale.Evaluate(EffectiveHeft) * moveForce * d ;
+                rb.AddForce((_isGrounded? 1 : airSpeedModifier) * f * moveDirection, ForceMode.Force);
                 animator.speed = 1;
+                if (HeftStage == 2) animator.SetInteger("Rolling", 2);
             }
         }
         else
         {
             animator.speed = 0;
+        }
+
+        if (forceBall)
+        {
+            animator.speed = 1;
+            animator.SetInteger("Rolling", HeftStage);
         }
         SwitchParticles(particles1, particleOn);
         SwitchParticles(particles2, particleOn);
@@ -244,7 +279,7 @@ public class Player : MonoBehaviour
         
         Debug.DrawRay(ray.origin, ray.direction * raycastDistance, Color.red);
         
-        if (Physics.Raycast(ray, out hit, raycastDistance, _interactionLayers))
+        if (Physics.Raycast(ray, out hit, raycastDistance, interactionLayers, QueryTriggerInteraction.Ignore))
         {
             Interactable interactable = hit.collider.attachedRigidbody? hit.collider.attachedRigidbody.GetComponent<Interactable>() : hit.collider.GetComponent<Interactable>();
             
@@ -318,7 +353,7 @@ public class Player : MonoBehaviour
 
                 // 2. Drop position (spread slightly so they don't overlap)
                 Vector3 dropPosition = transform.position 
-                    + transform.forward * 1.5f   // in front of player
+                    + transform.forward * 0.3f   // in front of player
                     + Vector3.up * (0.5f + index * verticalSpacing);
 
 

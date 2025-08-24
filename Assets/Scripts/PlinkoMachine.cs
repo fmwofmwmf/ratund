@@ -71,7 +71,7 @@ public class PlinkoMachine : MonoBehaviour
         // move player to plinko start
         Player.player.transform.position = plinkoBallSpawnPoint.position;
         Player.player.transform.rotation = plinkoBallSpawnPoint.rotation;
-
+        Player.player.forceBall = true;
         Rigidbody rb = Player.player.GetComponent<Rigidbody>();
         if (rb != null)
         {
@@ -84,7 +84,7 @@ public class PlinkoMachine : MonoBehaviour
         // move player to eject point
         Player.player.transform.position = ratEjectPoint.position;
         Player.player.transform.rotation = ratEjectPoint.rotation;
-
+        Player.player.forceBall = false;
         // switch camera back
         if (plinkoCamera != null)
             plinkoCamera.enabled = false;

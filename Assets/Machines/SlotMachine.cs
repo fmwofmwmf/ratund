@@ -105,8 +105,8 @@ public class SlotMachineDirect : MonoBehaviour
             if (roll <= cumulative)
             {
                 // Triple win
-                return new Sprite[] { s.sprite, s.sprite, s.sprite };
                 _winnings = s.win;
+                return new Sprite[] { s.sprite, s.sprite, s.sprite };
             }
         }
 

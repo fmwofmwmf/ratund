@@ -58,7 +58,7 @@ public class ThirdPersonCamera : MonoBehaviour
         Vector3 desiredPosition = target.position + rotatedOffset;
         transform.position = Vector3.Slerp(transform.position, desiredPosition, followSpeed * Time.fixedDeltaTime);
         var v = (transform.position - target.position);
-        if (Physics.Raycast(target.position, v.normalized, out RaycastHit hit, v.magnitude, notLook))
+        if (Physics.Raycast(target.position, v.normalized, out RaycastHit hit, v.magnitude, notLook, QueryTriggerInteraction.Ignore))
         {
             transform.position = hit.point;
         }
