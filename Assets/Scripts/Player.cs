@@ -15,9 +15,7 @@ public class Player : MonoBehaviour
 
     [Header("Chip Stack Display")]
     public Transform chipStackSpawnPoint;
-    public Chip chip1Prefab;
-    public Chip chip5Prefab;
-    public Chip chip20Prefab;
+    public float chipHeight = 0.2f;
     public List<Chip> displayChips = new List<Chip>();
     
     [Header("Bounciness Settings")]
@@ -156,7 +154,7 @@ public class Player : MonoBehaviour
             if (sprintInput)
             {
                 rb.AddForce((_isGrounded? 1 : airSpeedModifier) * sprintMoveForce * d * moveDirection, ForceMode.Force);
-                animator.speed = 2;
+                animator.speed = 3;
                 if (_isGrounded)
                 {
                     particleOn = true;
@@ -331,7 +329,12 @@ public class Player : MonoBehaviour
                 if (rb != null)
                 {
                     rb.isKinematic = false;
-                    rb.useGravity = true;
+                }
+                
+                Collider c = chip.GetComponent<Collider>();
+                if (c != null)
+                {
+                    c.enabled = true;
                 }
 
                 // 5. Re-enable interaction
@@ -356,19 +359,25 @@ public class Player : MonoBehaviour
         return _currentInteractable != null;
     }
 
+    private int _a;
+
     public void PickUpChip(Chip chip)
     {
         Vector3 offset = new Vector3(0, 0, 0);
         for (int i = 0; i < GetChipCount(); i++)
         {
-            offset.y += 0.05f;
+            offset.y += chipHeight;
         }
 
         Rigidbody rb = chip.GetComponent<Rigidbody>();
         if (rb != null)
         {
             rb.isKinematic = true;
-            rb.useGravity = false;
+        }
+        Collider c = chip.GetComponent<Collider>();
+        if (c != null)
+        {
+            c.enabled = false;
         }
 
         Interactable inter = chip.gameObject.GetComponent<Interactable>();
@@ -377,35 +386,19 @@ public class Player : MonoBehaviour
             inter.SetCanInteract(false);
         }
 
+        _a++;
+
         displayChips.Add(chip);
         chip.transform.SetParent(chipStackSpawnPoint);
         chip.transform.localPosition = offset;
-        chip.transform.localRotation = Quaternion.Euler(90, 0, 0);
+        chip.transform.localRotation = Quaternion.Euler(90, 0, 22.5f * (_a % 2));
     }
 
     public int GetChipCount() 
     {
         return displayChips.Count;
     }
-
-    public bool RemoveChip(int amount = 1)
-    {
-        for (int i = 0; i < amount; i++)
-        {
-            if (displayChips.Count > 0)
-            {
-                Chip chipToRemove = displayChips.Last();
-                displayChips.Remove(chipToRemove);
-                Destroy(chipToRemove);
-            }
-            else
-            {
-                return false;
-            }
-        }
-        return true;
-    }
-
+    
     public void modifyHeft(float amount)
     {
         SetHeft(heft + amount);
