@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,6 @@ public class Player : MonoBehaviour
 
     private Rigidbody rb;
     private Camera _playerCamera;
-    private BoxCollider _boxCollider;
     private PhysicsMaterial _physicsMaterial;
 
     [Header("Chip Stack Display")]
@@ -18,7 +18,7 @@ public class Player : MonoBehaviour
     public Chip chipPrefab;
     public GameObject displayChipPrefab;
     public List<Chip> displayChips = new List<Chip>();
-
+    
     [Header("Bounciness Settings")]
     public AnimationCurve bouncinessCurve;
     public float maxBounciness = 0.8f;
@@ -30,12 +30,18 @@ public class Player : MonoBehaviour
     public float moveForce = 5f;
     public float sprintMoveForce = 8f;
     public float rotation_speed = 10f;
+    public float airDrag;
+    public float groundDrag;
+    public float airSpeedModifier;
+    public AnimationCurve moveDotScale;
+    public Animator animator;
+    public ParticleSystem particles1, particles2;
 
     [Header("Interaction")]
     private float _interactionRange = 3f;
     private LayerMask _interactionLayers = -1;
     public float raycastDistance = 10f;
-
+    
     private Interactable _currentInteractable;
     private bool _interactPressed = false;
     private CrosshairUI _crosshairUI;
@@ -59,6 +65,9 @@ public class Player : MonoBehaviour
 
     public AnimationCurve a;
 
+    public Transform hatAnchor;
+    public Hat currentHat;
+
     void Start()
     {
         Debug.Log(a.Evaluate(.5f));
@@ -67,10 +76,8 @@ public class Player : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         rb.freezeRotation = true;
         _playerCamera = Camera.main;
-        _boxCollider = GetComponent<BoxCollider>();
         _physicsMaterial = new PhysicsMaterial();
         _physicsMaterial.bounceCombine = PhysicsMaterialCombine.Maximum;
-        _boxCollider.material = _physicsMaterial;
         UnityEngine.Cursor.lockState = CursorLockMode.Locked;
 
         SetHeft(heft);
@@ -83,6 +90,21 @@ public class Player : MonoBehaviour
         HandleMovement();
         HandleInteraction();
         HandleChipDrop();
+    }
+
+    private void FixedUpdate()
+    {
+        var d = rb.linearVelocity;
+        d.y = 0;
+        rb.linearVelocity -= (_isGrounded? groundDrag : airDrag) * Time.fixedDeltaTime * d;
+    }
+
+    public void WearHat(Hat hat)
+    {
+        if (currentHat) currentHat.DropHat();
+        currentHat = hat;
+        hat.transform.SetParent(hatAnchor);
+        hat.transform.SetPositionAndRotation(hatAnchor.position, hatAnchor.rotation);
     }
 
     public float getChipValue()
@@ -120,6 +142,8 @@ public class Player : MonoBehaviour
         cameraForward.Normalize();
         cameraRight.Normalize();
 
+        bool particleOn = false;
+        
         // Handle movement input
         Vector2 moveInput = PlayerInputs.Move;
         if (moveInput != Vector2.zero)
@@ -127,22 +151,40 @@ public class Player : MonoBehaviour
             Vector3 moveDirection = cameraForward * moveInput.y + cameraRight * moveInput.x;
 
             bool sprintInput = PlayerInputs.Sprint;
-            if (sprintInput == true)
+            var d = moveDotScale.Evaluate(Vector3.Dot(moveDirection, rb.linearVelocity));
+            if (sprintInput)
             {
-                rb.AddForce(moveDirection * sprintMoveForce, ForceMode.Force);
+                rb.AddForce((_isGrounded? 1 : airSpeedModifier) * sprintMoveForce * d * moveDirection, ForceMode.Force);
+                animator.speed = 2;
+                if (_isGrounded)
+                {
+                    particleOn = true;
+                }
             }
             else
             {
-                rb.AddForce(moveDirection * moveForce, ForceMode.Force);
+                rb.AddForce((_isGrounded? 1 : airSpeedModifier) * moveForce * d * moveDirection, ForceMode.Force);
+                animator.speed = 1;
             }
         }
-
+        else
+        {
+            animator.speed = 0;
+        }
+        SwitchParticles(particles1, particleOn);
+        SwitchParticles(particles2, particleOn);
         // Player rotation follows camera direction (reuse the same cameraForward variable)
         if (cameraForward != Vector3.zero)
         {
             Quaternion targetRotation = Quaternion.LookRotation(cameraForward);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotation_speed * 0.5f * Time.deltaTime);
         }
+    }
+
+    private void SwitchParticles(ParticleSystem particles, bool on)
+    {
+        var e = particles.emission;
+        e.enabled = on;
     }
 
     private void HandleJumpInput()
@@ -184,10 +226,7 @@ public class Player : MonoBehaviour
 
     private bool CheckGrounded()
     {
-        Vector3 boxCenter = _boxCollider.bounds.center;
-        Vector3 boxSize = _boxCollider.bounds.size;
-        
-        Vector3 checkPosition = new Vector3(boxCenter.x, boxCenter.y - (boxSize.y * 0.5f), boxCenter.z);
+        Vector3 checkPosition = transform.position + Vector3.down * groundCheckDistance;
         
         bool grounded = Physics.CheckSphere(checkPosition, groundCheckRadius, groundLayerMask);
         
@@ -196,7 +235,6 @@ public class Player : MonoBehaviour
 
     private void FindInteractableInSight()
     {
-        _currentInteractable = null;
         
         // Raycast from camera center
         Ray ray = _playerCamera.ScreenPointToRay(new Vector3(Screen.width * 0.5f, Screen.height * 0.5f, 0));
@@ -206,18 +244,22 @@ public class Player : MonoBehaviour
         
         if (Physics.Raycast(ray, out hit, raycastDistance, _interactionLayers))
         {
-            Interactable interactable = hit.collider.GetComponent<Interactable>();
+            Interactable interactable = hit.collider.attachedRigidbody? hit.collider.attachedRigidbody.GetComponent<Interactable>() : hit.collider.GetComponent<Interactable>();
             
-            if (interactable != null && interactable.CanInteract)
+            float distance = Vector3.Distance(transform.position, hit.point);
+            
+            if (interactable != null && interactable.CanInteract && distance <= interactable.InteractionDistance)
             {
-                float distance = Vector3.Distance(transform.position, hit.point);
-                
-                // Check if within interaction range
-                if (distance <= interactable.InteractionDistance)
-                {
-                    _currentInteractable = interactable;
-                }
+                if (interactable != _currentInteractable) ChangeInteractable(interactable);
             }
+            else
+            {
+                ChangeInteractable(null);
+            }
+        }
+        else if (_currentInteractable)
+        {
+            ChangeInteractable(null);
         }
         
         // Update crosshair visual state with interaction prompt
@@ -225,6 +267,21 @@ public class Player : MonoBehaviour
         {
             string promptText = _currentInteractable != null ? _currentInteractable.InteractionPrompt : "";
             _crosshairUI.SetInteractableState(_currentInteractable != null, promptText);
+        }
+    }
+
+    private void ChangeInteractable(Interactable interactable)
+    {
+        if (_currentInteractable && _currentInteractable.toggle) _currentInteractable.toggle.enabled = false;
+        _currentInteractable = interactable;
+        if (!_currentInteractable)
+        {
+            _crosshairUI.SetInteractableState(false,"");
+        } 
+        else
+        {
+            _crosshairUI.SetInteractableState(true,interactable.InteractionPrompt);
+            if (_currentInteractable.toggle) _currentInteractable.toggle.enabled = true;
         }
     }
     
@@ -345,15 +402,10 @@ public class Player : MonoBehaviour
             Gizmos.DrawLine(transform.position, _currentInteractable.transform.position);
         }
         
-        if (_boxCollider != null)
-        {
-            Vector3 boxCenter = _boxCollider.bounds.center;
-            Vector3 boxSize = _boxCollider.bounds.size;
-            Vector3 checkPosition = new Vector3(boxCenter.x, boxCenter.y - (boxSize.y * 0.5f), boxCenter.z);
-            
-            Gizmos.color = _isGrounded ? Color.green : Color.red;
-            Gizmos.DrawWireSphere(checkPosition, groundCheckRadius);
-        }
+        Vector3 checkPosition = transform.position + Vector3.down * groundCheckDistance;            
+        Gizmos.color = _isGrounded ? Color.green : Color.red;
+        Gizmos.DrawWireSphere(checkPosition, groundCheckRadius);
+        
     }
 
 }

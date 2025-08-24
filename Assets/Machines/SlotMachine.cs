@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using TMPro;
 
 public class SlotMachineDirect : MonoBehaviour
 {
@@ -10,11 +11,13 @@ public class SlotMachineDirect : MonoBehaviour
     {
         public Sprite sprite;
         [Range(0f, 1f)] public float probability; // chance of triple win
+        public int win;
     }
 
     [Header("Setup")]
     public SymbolChance[] symbols; // assign sprites + odds
     public Image[] reels;          // assign 3 UI Images in Inspector
+    public ChipSpawner spawner;
 
     [Header("Spin Settings")]
     public float spinTime = 1.5f;
@@ -23,9 +26,36 @@ public class SlotMachineDirect : MonoBehaviour
 
     private System.Random rand = new System.Random();
 
+    public float money;
+    public TextMeshProUGUI moneyText;
+    public TextMeshProUGUI betText;
+    public int betAmount;
+    private int _winnings;
+    
     private void Start()
     {
         Spin();
+    }
+
+    public void SetBet1()
+    {
+        betAmount = 1;
+    }
+    
+    public void SetBet3()
+    {
+        betAmount = 3;
+    }
+    
+    public void SetBet5()
+    {
+        betAmount = 5;
+    }
+
+    private void Update()
+    {
+        moneyText.text = $"Credit: {(int)money}";
+        betText.text = $"Bet: {betAmount}";
     }
 
     public void Spin()
@@ -76,6 +106,7 @@ public class SlotMachineDirect : MonoBehaviour
             {
                 // Triple win
                 return new Sprite[] { s.sprite, s.sprite, s.sprite };
+                _winnings = s.win;
             }
         }
 
@@ -105,10 +136,11 @@ public class SlotMachineDirect : MonoBehaviour
         if (results[0] == results[1] && results[1] == results[2])
         {
             Debug.Log("WIN!");
+            spawner.SpawnChips(betAmount * _winnings);
         }
         else
         {
-            Debug.Log("Lose");
+            spawner.SpawnChips(1);
         }
     }
 }

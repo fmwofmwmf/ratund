@@ -3,6 +3,7 @@ using UnityEngine.Events;
 
 public class Interactable : MonoBehaviour
 {
+    public Outline toggle;
     public string _interactionPrompt = "Press E to interact";
     public float _interactionDistance = 3f;
     public bool _canInteract = true;

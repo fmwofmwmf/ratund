@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 2641205825608394266}
   - component: {fileID: 2217980168377758634}
   - component: {fileID: 799011535498988065}
+  - component: {fileID: -8594487749883558219}
   m_Layer: 0
   m_Name: Chip 20
   m_TagString: Untagged
@@ -165,6 +166,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 62a54e4de97602f40a521713c91f7e6d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  toggle: {fileID: -8594487749883558219}
   _interactionPrompt: Press E to interact
   _interactionDistance: 3
   _canInteract: 1
@@ -183,3 +185,22 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &-8594487749883558219
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2393239963267218015}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fea29bb7c508c244a1f805a5fd3fc4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  outlineMode: 0
+  outlineColor: {r: 1, g: 1, b: 1, a: 1}
+  outlineWidth: 10
+  precomputeOutline: 0
+  bakeKeys: []
+  bakeValues: []
+  sleepOnStart: 1

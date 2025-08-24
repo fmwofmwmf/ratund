@@ -21,7 +21,7 @@ public class VendingMachine : MonoBehaviour
     public float roundCheeseCost = 3f;
     public float wedgeCheeseCost = 1f;
 
-    float depositedAmount = 0f;
+    public float depositedAmount = 0f;
 
     public void depositChips()
     {
@@ -73,7 +73,7 @@ public class VendingMachine : MonoBehaviour
     private void changeDepositedAmount(float amount)
     {
         depositedAmount += amount;
-        depositedAmountDisplayText.text = ((int)depositedAmount).ToString();
+        depositedAmountDisplayText.text = $"${(int)depositedAmount}";
     }
 
     private bool hasDepositedAmount(float cost)
