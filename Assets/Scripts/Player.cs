@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.UIElements;
+using NUnit.Framework.Interfaces;
 
 public class Player : MonoBehaviour
 {
@@ -16,7 +17,7 @@ public class Player : MonoBehaviour
     public Transform chipStackSpawnPoint;
     public Chip chipPrefab;
     public GameObject displayChipPrefab;
-    public List<GameObject> displayChips = new List<GameObject>();
+    public List<Chip> displayChips = new List<Chip>();
 
     [Header("Bounciness Settings")]
     public AnimationCurve bouncinessCurve;
@@ -83,18 +84,37 @@ public class Player : MonoBehaviour
         HandleInteraction();
         HandleChipDrop();
     }
+
+    public float getChipValue()
+    {
+        float result = 0f;
+        foreach (Chip chip in displayChips)
+        {
+            result += chip.value;
+        }
+        return result;
+    }
+
+    public void ClearChips()
+    {
+        foreach (Chip chip in displayChips)
+        {
+            Destroy(chip.gameObject);
+        }
+        displayChips.Clear();
+    }
     
     private void HandleMovement()
     {
         _isGrounded = CheckGrounded();
-        
+
         // Handle jump input with single jump per press
         HandleJumpInput();
 
         // Declare camera directions once for the entire method
         Vector3 cameraForward = _playerCamera.transform.forward;
         Vector3 cameraRight = _playerCamera.transform.right;
-        
+
         cameraForward.y = 0;
         cameraRight.y = 0;
         cameraForward.Normalize();
@@ -108,15 +128,15 @@ public class Player : MonoBehaviour
 
             bool sprintInput = PlayerInputs.Sprint;
             if (sprintInput == true)
-            { 
+            {
                 rb.AddForce(moveDirection * sprintMoveForce, ForceMode.Force);
             }
             else
-            { 
+            {
                 rb.AddForce(moveDirection * moveForce, ForceMode.Force);
             }
         }
-        
+
         // Player rotation follows camera direction (reuse the same cameraForward variable)
         if (cameraForward != Vector3.zero)
         {
@@ -225,7 +245,9 @@ public class Player : MonoBehaviour
         bool dropInput = PlayerInputs.Drop;
         if (dropInput)
         {
-            DropChip();
+             bool wasRemoved = RemoveChip();
+            if (!wasRemoved) return;
+            Instantiate(chipPrefab, chipStackSpawnPoint.position + chipStackSpawnPoint.forward * 0.5f, chipStackSpawnPoint.rotation);
         }
     }
 
@@ -239,16 +261,25 @@ public class Player : MonoBehaviour
         return _currentInteractable != null;
     }
 
-    public void PickUpChip()
+    public void PickUpChip(Chip chip)
     {
         Vector3 offset = new Vector3(0, 0, 0);
         for (int i = 0; i < GetChipCount(); i++)
         {
-            offset.y += 0.2f;
+            offset.y += 0.05f;
         }
 
-        GameObject chip = Instantiate(displayChipPrefab, chipStackSpawnPoint.position + offset, chipStackSpawnPoint.rotation, chipStackSpawnPoint);
+        Rigidbody rb = chip.GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            rb.isKinematic = true;
+            rb.useGravity = false;
+        }
+
         displayChips.Add(chip);
+        chip.transform.SetParent(chipStackSpawnPoint);
+        chip.transform.localPosition = offset;
+        chip.transform.localRotation = Quaternion.Euler(90, 0, 0);
     }
 
     public int GetChipCount() 
@@ -262,7 +293,7 @@ public class Player : MonoBehaviour
         {
             if (displayChips.Count > 0)
             {
-                GameObject chipToRemove = displayChips.Last();
+                Chip chipToRemove = displayChips.Last();
                 displayChips.Remove(chipToRemove);
                 Destroy(chipToRemove);
             }
@@ -272,13 +303,6 @@ public class Player : MonoBehaviour
             }
         }
         return true;
-    }
-
-    public void DropChip()
-    {
-        bool wasRemoved = RemoveChip();
-        if (!wasRemoved) return;
-        Instantiate(chipPrefab, chipStackSpawnPoint.position + chipStackSpawnPoint.forward * 0.5f, chipStackSpawnPoint.rotation);
     }
 
     public void modifyHeft(float amount)

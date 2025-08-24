@@ -23,15 +23,12 @@ public class VendingMachine : MonoBehaviour
 
     float depositedAmount = 0f;
 
-    public void depositChipAmount(float amount)
+    public void depositChips()
     {
-        int playerChipCount = Player.player.GetChipCount();
-        if (playerChipCount >= amount)
-        {
-            changeDepositedAmount(amount);
-            depositedAmountUpdate.Invoke(depositedAmount);
-            Player.player.RemoveChip((int)amount);
-        }
+        float chipValue = Player.player.getChipValue();
+        changeDepositedAmount(chipValue);
+        depositedAmountUpdate.Invoke(chipValue);
+        Player.player.ClearChips();
     }
 
     public void buyStarCheese()
