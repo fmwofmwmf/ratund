@@ -6,6 +6,7 @@ public class Cheese : MonoBehaviour
     public void Eat()
     {
         Player.player.modifyHeft(value);
+        PlayerAudio.playerAudio.PlayNibble();
         Destroy(gameObject);
     }
 }
