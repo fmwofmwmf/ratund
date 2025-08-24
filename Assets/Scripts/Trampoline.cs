@@ -13,6 +13,7 @@ public class Trampoline : MonoBehaviour
         if (other.rigidbody && other.rigidbody.TryGetComponent(out Player p))
         {
             if (Vector3.Dot(other.GetContact(0).normal.normalized, Vector3.up) > 0) return;
+            PlayerAudio.playerAudio.PlayBoing();
             Debug.Log(other.relativeVelocity.magnitude);
             float m = baseForce + p.EffectiveHeft * sizeScaling + velocityScaling.Evaluate(other.relativeVelocity.magnitude);
             m = Mathf.Min(m, maxForce);

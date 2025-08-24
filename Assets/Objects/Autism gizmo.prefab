@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 3103179058220529642}
   - component: {fileID: 3044734781861351518}
   - component: {fileID: 4707466549418078343}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Trigger
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -97,7 +97,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   baseForce: 2
   maxForce: 4
-  velocityScaling: 1
+  velocityScaling:
+    serializedVersion: 2
+    m_Curve: []
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   sizeScaling: 1
 --- !u!1 &3800683515387205418
 GameObject:
@@ -109,7 +114,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6003825500239020100}
   - component: {fileID: 6687022321226733602}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Cube (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -163,7 +168,7 @@ GameObject:
   - component: {fileID: 7148594655056794323}
   - component: {fileID: 8708389609850691312}
   - component: {fileID: 5254984733376645889}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Autism gizmo
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -253,7 +258,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8917406914472695946}
   - component: {fileID: 2449164674568470198}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Cube
   m_TagString: Untagged
   m_Icon: {fileID: 0}

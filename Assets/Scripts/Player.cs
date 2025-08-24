@@ -181,25 +181,46 @@ public class Player : MonoBehaviour
             if (sprintInput)
             {
                 var f = heftSprintScale.Evaluate(EffectiveHeft) * sprintMoveForce * d;
-                rb.AddForce((_isGrounded? 1 : airSpeedModifier) * f * moveDirection, ForceMode.Force);
+                rb.AddForce((_isGrounded ? 1 : airSpeedModifier) * f * moveDirection, ForceMode.Force);
                 animator.speed = 3;
                 if (_isGrounded)
                 {
                     particleOn = true;
+                    if (HeftStage < 2)
+                    {
+                        PlayerAudio.playerAudio.StartWalking();
+                    }
+                    else
+                    {
+                        PlayerAudio.playerAudio.StopWalking();
+                    }
+                }
+                else
+                {
+                    PlayerAudio.playerAudio.StopWalking();
                 }
                 if (HeftStage == 1) animator.SetInteger("Rolling", 1);
                 else if (HeftStage == 2) animator.SetInteger("Rolling", 2);
             }
             else
             {
-                var f = heftWalkScale.Evaluate(EffectiveHeft) * moveForce * d ;
-                rb.AddForce((_isGrounded? 1 : airSpeedModifier) * f * moveDirection, ForceMode.Force);
+                var f = heftWalkScale.Evaluate(EffectiveHeft) * moveForce * d;
+                rb.AddForce((_isGrounded ? 1 : airSpeedModifier) * f * moveDirection, ForceMode.Force);
                 animator.speed = 1;
-                if (HeftStage == 2) animator.SetInteger("Rolling", 2);
+                if (HeftStage == 2)
+                {
+                    animator.SetInteger("Rolling", 2);
+                    PlayerAudio.playerAudio.StopWalking();
+                }
+                else if (_isGrounded)
+                {
+                    PlayerAudio.playerAudio.StartWalking();
+                }
             }
         }
         else
         {
+            PlayerAudio.playerAudio.StopWalking();
             animator.speed = 0;
         }
 
@@ -266,7 +287,12 @@ public class Player : MonoBehaviour
         Vector3 checkPosition = transform.position + Vector3.down * groundCheckDistance;
         
         bool grounded = Physics.CheckSphere(checkPosition, groundCheckRadius, groundLayerMask);
-        
+
+        if (_isGrounded == false && grounded)
+        {
+            PlayerAudio.playerAudio.PlayLand();
+        }
+
         return grounded;
     }
 
