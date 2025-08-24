@@ -22,6 +22,8 @@ public class PlayerInputs: MonoBehaviour
     public static Vector2 Move => Main._move.ReadValue<Vector2>();
     private InputAction _look;
     public static Vector2 Look => Main._look.ReadValue<Vector2>();
+    private InputAction _respawn;
+    public static bool Respawn => Main._respawn.IsPressed();
 
     private void Awake()
     {
@@ -43,6 +45,7 @@ public class PlayerInputs: MonoBehaviour
     _menu = inputs.currentActionMap.FindAction("Menu");
     _move = inputs.currentActionMap.FindAction("Move");
     _look = inputs.currentActionMap.FindAction("Look");
+    _respawn = inputs.currentActionMap.FindAction("Respawn");
 }
 }
 

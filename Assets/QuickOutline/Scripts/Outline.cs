@@ -80,7 +80,9 @@ public class Outline : MonoBehaviour {
   
   private bool needsUpdate;
   public bool sleepOnStart;
-  void Awake() {
+
+  void Awake()
+  {
 
     // Cache renderers
     renderers = GetComponentsInChildren<Renderer>();
@@ -97,15 +99,15 @@ public class Outline : MonoBehaviour {
 
     // Apply material properties immediately
     needsUpdate = true;
-    
-    foreach (var renderer in renderers) {
+
+    foreach (var renderer in renderers)
+    {
 
       // Append outline shaders
       var materials = renderer.sharedMaterials.ToList();
-
+      materials.RemoveAll(m => m.name == "OutlineMask (Instance)" ||  m.name == "OutlineFill (Instance)" || !m);
       materials.Add(outlineMaskMaterial);
       materials.Add(outlineFillMaterial);
-
       renderer.materials = materials.ToArray();
     }
     
@@ -153,11 +155,12 @@ public class Outline : MonoBehaviour {
     //   renderer.materials = materials.ToArray();
     // }
     outlineFillMaterial.SetFloat("_OutlineEnabled", 0);
+    
+    
   }
 
   void OnDestroy() {
-
-    // Destroy material instances
+    
     Destroy(outlineMaskMaterial);
     Destroy(outlineFillMaterial);
   }

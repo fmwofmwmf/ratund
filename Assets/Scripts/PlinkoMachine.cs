@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class PlinkoMachine : MonoBehaviour
@@ -12,7 +13,7 @@ public class PlinkoMachine : MonoBehaviour
     public Chip chip1Prefab;
     public Chip chip5Prefab;
     public Chip chip20Prefab;
-
+    public List<Pin> pins;
     void Start()
     {
         if (plinkoCamera != null)
@@ -76,6 +77,16 @@ public class PlinkoMachine : MonoBehaviour
         if (rb != null)
         {
             rb.linearVelocity = Vector3.zero;
+        }
+
+        if (Player.player.heft >= 1000)
+        {
+            Player.player.GetComponent<Rigidbody>().mass = 1000;
+            Player.player.GetComponent<SphereCollider>().radius = 1;
+            foreach (var pin in pins)
+            {
+                pin.GetComponent<Rigidbody>().isKinematic = false;
+            }
         }
     }
 

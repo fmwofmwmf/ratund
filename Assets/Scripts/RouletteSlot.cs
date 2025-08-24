@@ -29,6 +29,7 @@ public class RouletteSlot : MonoBehaviour
 
     public List<Chip> GetChips()
     {
+        chipsInSlot.RemoveAll(c => !c);
         return new List<Chip>(chipsInSlot); // return copy
     }
 }

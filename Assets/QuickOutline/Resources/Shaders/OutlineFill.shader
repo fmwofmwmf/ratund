@@ -12,7 +12,7 @@ Shader "Custom/Outline Fill" {
 
     _OutlineColor("Outline Color", Color) = (1, 1, 1, 1)
     _OutlineWidth("Outline Width", Range(0, 10)) = 2
-    _OutlineEnabled ("Enable Outline", Float) = 0
+    _OutlineEnabled ("Enable Outline", Float) = 1
   }
 
   SubShader {

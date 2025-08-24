@@ -49,6 +49,7 @@ public class Player : MonoBehaviour
     private float _interactionRange = 3f;
     public LayerMask interactionLayers;
     public float raycastDistance = 10f;
+    public Transform house;
     
     private Interactable _currentInteractable;
     private bool _interactPressed = false;
@@ -98,6 +99,7 @@ public class Player : MonoBehaviour
         HandleInteraction();
         HandleChipDrop();
         DoFatRat();
+        if (PlayerInputs.Respawn) transform.position = house.position;
     }
 
     private void FixedUpdate()
@@ -401,10 +403,11 @@ public class Player : MonoBehaviour
 
     public float GetPlinkoValue()
     { 
-        float heftFraction = heft / maxHeft;
-        float newBouncinessFraction = bouncinessCurve.Evaluate(heftFraction);
-        float plinkoValue = newBouncinessFraction * maxPlinkoValue;
-        return plinkoValue;
+        float amount = heft;
+        if (HeftStage == 0) amount /= 5;
+        if (HeftStage == 1) amount /= 4;
+        if (HeftStage == 2) amount /= 3;
+        return Mathf.Max(amount, 1);
     }
 
     public void PickUpChip(Chip chip)
@@ -447,6 +450,8 @@ public class Player : MonoBehaviour
     
     public void modifyHeft(float amount)
     {
+        if (HeftStage > 0 && amount < 10) amount /= 3;
+        if (HeftStage > 1 && amount < 100) amount /= 3;
         SetHeft(heft + amount);
     }
 

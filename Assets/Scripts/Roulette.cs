@@ -4,7 +4,7 @@ using System.Collections.Generic;
 public class Roulette : MonoBehaviour
 {
     private Dictionary<int, RouletteSlot> slots = new Dictionary<int, RouletteSlot>();
-
+    public float payoutCap;
     [Header("Collapsed reward prefab")]
     public GameObject collapsedPrefab;
 
@@ -24,7 +24,7 @@ public class Roulette : MonoBehaviour
         {
             List<Chip> chips = slot.GetChips();
             float multiplier = slot.multiplier;
-
+            float pay = 0;
             foreach (Chip chip in chips)
             {
                 if (multiplier >= 1f)
@@ -32,16 +32,20 @@ public class Roulette : MonoBehaviour
                     int extra = Mathf.FloorToInt(multiplier) - 1;
                     for (int i = 0; i < extra; i++)
                     {
+                        if (pay >= payoutCap) break;
                         Vector3 pos = chip.transform.position + Vector3.up * (0.02f * (i + 1));
                         Instantiate(chip, pos, Quaternion.identity);
+                        pay += chip.value;
                     }
                 }
 
                 float fractional = multiplier - Mathf.Floor(multiplier);
                 if (fractional > 0f && Random.value < fractional)
                 {
+                    if (pay >= payoutCap) break;
                     Vector3 pos = chip.transform.position + Vector3.up * 0.05f;
                     Instantiate(chip, pos, Quaternion.identity);
+                    pay += chip.value;
                 }
             }
 
@@ -76,7 +80,7 @@ public class Roulette : MonoBehaviour
                 // Spawn collapsed prefab
                 if (collapsedPrefab != null)
                 {
-                    Instantiate(collapsedPrefab, center, Quaternion.identity);
+                    Instantiate(collapsedPrefab, center, Quaternion.Euler(-90, 0, 0));
                 }
 
                 Debug.Log($"Collapsed {chips.Count} chips in slot {number} into 1 prefab.");

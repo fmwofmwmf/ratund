@@ -10,6 +10,7 @@ public class Hat : MonoBehaviour
         _rb.isKinematic = false;
         colliders.SetActive(true);
         transform.parent = null;
+        transform.position += Player.player.transform.forward * 0.3f + Vector3.up * 0.1f;
     }
 
     public void WearHat()
