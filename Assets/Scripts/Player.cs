@@ -299,8 +299,6 @@ public class Player : MonoBehaviour
 
             _lastJumpTime = Time.time;
             _hasJumped = true;
-
-            Debug.Log("Jump executed!");
         }
         
         // Reset jump flag when key is released
