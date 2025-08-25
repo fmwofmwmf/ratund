@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -16,6 +17,7 @@ public class PlinkoMachine : MonoBehaviour
     public Chip chip5Prefab;
     public Chip chip25Prefab;
     public List<Pin> pins;
+    public bool isEndGameState = false;
     void Start()
     {
         if (plinkoCamera != null)
@@ -63,7 +65,7 @@ public class PlinkoMachine : MonoBehaviour
             }
         }
     }
-    
+
     public void startPlinko()
     {
         // store old camera
@@ -93,6 +95,7 @@ public class PlinkoMachine : MonoBehaviour
             {
                 pin.GetComponent<Rigidbody>().isKinematic = false;
             }
+            isEndGameState = true;
         }
     }
 
@@ -108,5 +111,19 @@ public class PlinkoMachine : MonoBehaviour
 
         if (previousCamera != null)
             previousCamera.enabled = true;
+    }
+
+    public void playerStuckEndGameState()
+    {
+        if (isEndGameState)
+        {
+            StartCoroutine(EndGameRoutine());
+        }
+    }
+    
+    private IEnumerator EndGameRoutine()
+    {
+        yield return new WaitForSeconds(3.0f);
+        UnityEngine.SceneManagement.SceneManager.LoadScene("EndScene");
     }
 }
