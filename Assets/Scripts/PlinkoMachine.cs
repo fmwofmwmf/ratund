@@ -6,6 +6,10 @@ public class PlinkoMachine : MonoBehaviour
 {
     public AudioSource audioSource;
     public AudioClip knobBreakSound;
+    
+    [Header("Audio Settings")]
+    public AudioHelper.PitchSettings pitchSettings = new AudioHelper.PitchSettings();
+    
     public static PlinkoMachine plinkoMachine;
 
     public Camera plinkoCamera;
@@ -18,6 +22,7 @@ public class PlinkoMachine : MonoBehaviour
     public Chip chip25Prefab;
     public List<Pin> pins;
     public bool isEndGameState = false;
+    
     void Start()
     {
         if (plinkoCamera != null)
@@ -37,9 +42,11 @@ public class PlinkoMachine : MonoBehaviour
 
     public void playKnobBreakSound()
     {
-        audioSource.PlayOneShot(knobBreakSound, 0.1f);
+        AudioHelper.PlayOneShotWithRandomPitch(audioSource, knobBreakSound, 0.1f, 
+            pitchSettings.enablePitchVariation ? pitchSettings.pitchVariationRange : 0f);
     }
 
+    // Rest of the methods remain the same...
     public void spawnChips(int value = 0)
     {
         while (true)
@@ -68,7 +75,6 @@ public class PlinkoMachine : MonoBehaviour
 
     public void startPlinko()
     {
-        // store old camera
         previousCamera = Camera.main;
 
         if (previousCamera != null)
@@ -77,7 +83,6 @@ public class PlinkoMachine : MonoBehaviour
         if (plinkoCamera != null)
             plinkoCamera.enabled = true;
 
-        // move player to plinko start
         Player.player.transform.position = plinkoBallSpawnPoint.position;
         Player.player.transform.rotation = plinkoBallSpawnPoint.rotation;
         Player.player.forceBall = true;
@@ -101,11 +106,9 @@ public class PlinkoMachine : MonoBehaviour
 
     public void ejectPlayerFromMachine()
     {
-        // move player to eject point
         Player.player.transform.position = ratEjectPoint.position;
         Player.player.transform.rotation = ratEjectPoint.rotation;
         Player.player.forceBall = false;
-        // switch camera back
         if (plinkoCamera != null)
             plinkoCamera.enabled = false;
 

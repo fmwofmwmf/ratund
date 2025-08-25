@@ -12,23 +12,26 @@ public class SlotMachineDirect : MonoBehaviour
     public AudioClip spinSound;
     public AudioClip chipInsertSound;
 
+    [Header("Audio Settings")]
+    public AudioHelper.PitchSettings pitchSettings = new AudioHelper.PitchSettings();
+
     [System.Serializable]
     public class SymbolChance
     {
         public Sprite sprite;
-        [Range(0f, 1f)] public float probability; // chance of triple win
+        [Range(0f, 1f)] public float probability;
         public int win;
     }
 
     [Header("Setup")]
-    public SymbolChance[] symbols; // assign sprites + odds
-    public Image[] reels;          // assign 3 UI Images in Inspector
+    public SymbolChance[] symbols;
+    public Image[] reels;
     public ChipSpawner spawner;
 
     [Header("Spin Settings")]
     public float spinTime = 1.5f;
     public float cycleSpeed = 0.05f;
-    public float settleDelay = 0.5f; // staggered stop delay per reel
+    public float settleDelay = 0.5f;
 
     private System.Random rand = new System.Random();
 
@@ -50,11 +53,6 @@ public class SlotMachineDirect : MonoBehaviour
         }
     }
 
-    private void Start()
-    {
-        //Spin();
-    }
-
     public void trySpin()
     {
         isSpinning = true;
@@ -70,52 +68,46 @@ public class SlotMachineDirect : MonoBehaviour
 
     IEnumerator HandleSpinRoutine()
     {
-        // Store the original rotation
         Vector3 originalRotation = handle.transform.localEulerAngles;
-        
-        // Calculate target rotation (40 degrees down on X axis)
         Vector3 targetRotation = originalRotation + new Vector3(40f, 0f, 0f);
         
-        // Animate handle down
         float animationTime = 0.3f;
         float elapsedTime = 0f;
         
-        audioSource.PlayOneShot(leverSound, 0.1f);
+        AudioHelper.PlayOneShotWithRandomPitch(audioSource, leverSound, 0.1f, 
+            pitchSettings.enablePitchVariation ? pitchSettings.pitchVariationRange : 0f);
+            
         while (elapsedTime < animationTime)
         {
             elapsedTime += Time.deltaTime;
             float progress = elapsedTime / animationTime;
-            progress = Mathf.SmoothStep(0f, 1f, progress); // Smooth animation curve
+            progress = Mathf.SmoothStep(0f, 1f, progress);
 
             handle.transform.localEulerAngles = Vector3.Lerp(originalRotation, targetRotation, progress);
             yield return null;
         }
         
-        // Ensure handle is at exact target position
         handle.transform.localEulerAngles = targetRotation;
-        
-        // Animate handle back up
         elapsedTime = 0f;
         
         while (elapsedTime < animationTime)
         {
             elapsedTime += Time.deltaTime;
             float progress = elapsedTime / animationTime;
-            progress = Mathf.SmoothStep(0f, 1f, progress); // Smooth animation curve
+            progress = Mathf.SmoothStep(0f, 1f, progress);
             
             handle.transform.localEulerAngles = Vector3.Lerp(targetRotation, originalRotation, progress);
             yield return null;
         }
-        // Ensure handle returns to exact original position
         handle.transform.localEulerAngles = originalRotation;
 
-        // Start the spin
         Spin();
     }
 
     public void depositChips()
     {
-        audioSource.PlayOneShot(chipInsertSound, 0.1f);
+        AudioHelper.PlayOneShotWithRandomPitch(audioSource, chipInsertSound, 0.1f, 
+            pitchSettings.enablePitchVariation ? pitchSettings.pitchVariationRange : 0f);
         float chipValue = Player.player.getChipValue();
         changeMoney(chipValue);
         Update();
@@ -129,26 +121,17 @@ public class SlotMachineDirect : MonoBehaviour
 
     public void SetBet1()
     {
-        if (money >= 1)
-        { 
-            betAmount = 1;
-        }
+        if (money >= 1) betAmount = 1;
     }
     
     public void SetBet3()
     {
-        if (money >= 3)
-        {
-            betAmount = 3;
-        }
+        if (money >= 3) betAmount = 3;
     }
     
     public void SetBet5()
     {
-        if (money >= 5)
-        {
-            betAmount = 5;
-        }
+        if (money >= 5) betAmount = 5;
     }
 
     private void Update()
@@ -159,7 +142,8 @@ public class SlotMachineDirect : MonoBehaviour
 
     public void Spin()
     {
-        audioSource.PlayOneShot(spinSound, 0.1f);
+        AudioHelper.PlayOneShotWithRandomPitch(audioSource, spinSound, 0.1f, 
+            pitchSettings.enablePitchVariation ? pitchSettings.pitchVariationRange : 0f);
         isSpinning = true;
         money -= betAmount;
         StopAllCoroutines();
@@ -170,13 +154,11 @@ public class SlotMachineDirect : MonoBehaviour
     {
         Sprite[] finalResults = ChooseResults();
 
-        // Start all reels spinning
         for (int i = 0; i < reels.Length; i++)
         {
             StartCoroutine(SpinSingleReel(i, finalResults[i], spinTime + settleDelay * i));
         }
 
-        // Wait until the last reel finishes
         yield return new WaitForSeconds(spinTime + settleDelay * (reels.Length - 1));
 
         CheckWin(finalResults);
@@ -198,7 +180,7 @@ public class SlotMachineDirect : MonoBehaviour
             yield return new WaitForSeconds(cycleSpeed);
         }
 
-        reels[index].sprite = finalSprite; // settle on chosen result
+        reels[index].sprite = finalSprite;
     }
 
     Sprite[] ChooseResults()
@@ -206,26 +188,22 @@ public class SlotMachineDirect : MonoBehaviour
         float roll = (float)rand.NextDouble();
         float cumulative = 0f;
 
-        // Try each symbol's win chance
         foreach (var s in symbols)
         {
             cumulative += s.probability;
             if (roll <= cumulative)
             {
-                // Triple win
                 _winnings = s.win;
                 return new Sprite[] { s.sprite, s.sprite, s.sprite };
             }
         }
 
-        // Otherwise: random, but not all three the same
         Sprite[] randoms = new Sprite[reels.Length];
         for (int i = 0; i < reels.Length; i++)
         {
             randoms[i] = symbols[rand.Next(symbols.Length)].sprite;
         }
 
-        // Ensure not all 3 match
         if (randoms[0] == randoms[1] && randoms[1] == randoms[2])
         {
             Sprite replacement;
@@ -241,7 +219,8 @@ public class SlotMachineDirect : MonoBehaviour
 
     void CheckWin(Sprite[] results)
     {
-        audioSource.PlayOneShot(winSound, 0.08f);
+        AudioHelper.PlayOneShotWithRandomPitch(audioSource, winSound, 0.08f, 
+            pitchSettings.enablePitchVariation ? pitchSettings.pitchVariationRange : 0f);
         if (results[0] == results[1] && results[1] == results[2])
         {
             Debug.Log("WIN!");
@@ -251,6 +230,5 @@ public class SlotMachineDirect : MonoBehaviour
         {
             spawner.SpawnChips(1);
         }
-
     }
 }

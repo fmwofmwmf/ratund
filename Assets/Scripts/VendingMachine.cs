@@ -7,6 +7,10 @@ public class VendingMachine : MonoBehaviour
     public AudioSource audioSource;
     public AudioClip chipInsertSound;
     public AudioClip purchaseSound;
+    
+    [Header("Audio Settings")]
+    public AudioHelper.PitchSettings pitchSettings = new AudioHelper.PitchSettings();
+    
     public FloatUnityEvent depositedAmountUpdate;
     public UnityEvent notEnoughDepositedAmount;
     public UnityEvent boughtStarCheese;
@@ -28,7 +32,8 @@ public class VendingMachine : MonoBehaviour
 
     public void depositChips()
     {
-        audioSource.PlayOneShot(chipInsertSound, 0.1f);
+        AudioHelper.PlayOneShotWithRandomPitch(audioSource, chipInsertSound, 0.1f, 
+            pitchSettings.enablePitchVariation ? pitchSettings.pitchVariationRange : 0f);
         float chipValue = Player.player.getChipValue();
         changeDepositedAmount(chipValue);
         depositedAmountUpdate.Invoke(chipValue);
@@ -39,7 +44,8 @@ public class VendingMachine : MonoBehaviour
     {
         if (hasDepositedAmount(starCheeseCost))
         {
-            audioSource.PlayOneShot(purchaseSound, 0.07f);
+            AudioHelper.PlayOneShotWithRandomPitch(audioSource, purchaseSound, 0.07f, 
+                pitchSettings.enablePitchVariation ? pitchSettings.pitchVariationRange : 0f);
             changeDepositedAmount(-starCheeseCost);
             SpawnCheese(starCheesePrefab);
         }
@@ -53,7 +59,8 @@ public class VendingMachine : MonoBehaviour
     {
         if (hasDepositedAmount(roundCheeseCost))
         {
-            audioSource.PlayOneShot(purchaseSound, 0.07f);
+            AudioHelper.PlayOneShotWithRandomPitch(audioSource, purchaseSound, 0.07f, 
+                pitchSettings.enablePitchVariation ? pitchSettings.pitchVariationRange : 0f);
             changeDepositedAmount(-roundCheeseCost);
             SpawnCheese(roundCheesePrefab);
         }
@@ -67,7 +74,8 @@ public class VendingMachine : MonoBehaviour
     {
         if (hasDepositedAmount(wedgeCheeseCost))
         {
-            audioSource.PlayOneShot(purchaseSound, 0.07f);
+            AudioHelper.PlayOneShotWithRandomPitch(audioSource, purchaseSound, 0.07f, 
+                pitchSettings.enablePitchVariation ? pitchSettings.pitchVariationRange : 0f);
             changeDepositedAmount(-wedgeCheeseCost);
             SpawnCheese(wedgeCheesePrefab);
         }

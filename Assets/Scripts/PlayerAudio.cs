@@ -6,6 +6,9 @@ public class PlayerAudio : MonoBehaviour
 
     public AudioSource audioSource;
 
+    [Header("Audio Settings")]
+    public AudioHelper.PitchSettings pitchSettings = new AudioHelper.PitchSettings();
+    
     public AudioClip landSound;
     public AudioClip nibbleSound;
     public AudioClip screamSound;
@@ -15,49 +18,52 @@ public class PlayerAudio : MonoBehaviour
     public AudioClip walkSound;
     public AudioClip boingSound;
 
+    private float originalPitch;
+
     public void Awake()
     {
         playerAudio = this;
+        originalPitch = audioSource.pitch;
     }
 
     public void PlayLand()
     {
-        PlaySound(landSound);
+        PlaySoundWithRandomPitch(landSound);
     }
 
     public void PlayNibble()
     {
-        PlaySound(nibbleSound);
+        PlaySoundWithRandomPitch(nibbleSound);
     }
 
     public void PlayScream()
     {
-        PlaySound(screamSound);
+        PlaySoundWithRandomPitch(screamSound);
     }
 
     public void PlaySqueak1()
     {
-        PlaySound(squeak1Sound);
+        PlaySoundWithRandomPitch(squeak1Sound);
     }
 
     public void PlaySqueak2()
     {
-        PlaySound(squeak2Sound);
+        PlaySoundWithRandomPitch(squeak2Sound);
     }
 
     public void PlaySqueak3()
     {
-        PlaySound(squeak3Sound);
+        PlaySoundWithRandomPitch(squeak3Sound);
     }
 
     public void PlayWalk()
     {
-        PlaySound(walkSound);
+        PlaySoundWithRandomPitch(walkSound);
     }
 
     public void PlayBoing()
     {
-        PlaySound(boingSound, 0.05f);
+        PlaySoundWithRandomPitch(boingSound, 0.05f);
     }
 
     public void PlayRandomSqueak()
@@ -75,9 +81,8 @@ public class PlayerAudio : MonoBehaviour
     {
         if (walkSound != null && (!audioSource.isPlaying || audioSource.clip != walkSound))
         {
-            audioSource.clip = walkSound;
-            audioSource.loop = true;
-            audioSource.Play();
+            AudioHelper.PlayWithRandomPitch(audioSource, walkSound, true, 1f, 
+                pitchSettings.enablePitchVariation ? pitchSettings.pitchVariationRange : 0f);
         }
     }
 
@@ -88,14 +93,18 @@ public class PlayerAudio : MonoBehaviour
             audioSource.Stop();
             audioSource.loop = false;
             audioSource.clip = null;
+            audioSource.pitch = originalPitch;
         }
     }
 
-    private void PlaySound(AudioClip clip, float volume = 1f)
+    private void PlaySoundWithRandomPitch(AudioClip clip, float volume = 1f)
     {
-        if (clip != null)
+        if (!pitchSettings.enablePitchVariation)
         {
             audioSource.PlayOneShot(clip, volume);
+            return;
         }
+        
+        AudioHelper.PlayOneShotWithRandomPitch(audioSource, clip, volume, pitchSettings.pitchVariationRange);
     }
 }
